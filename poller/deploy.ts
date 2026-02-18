@@ -14,18 +14,26 @@ export async function sendToDeploy(
   data: NowPlayingData,
 ): Promise<boolean> {
   try {
+    const body = JSON.stringify(data);
+    console.log(
+      `JSON payload size: ${body.length} chars (${
+        (body.length / 1024).toFixed(1)
+      }KB)`,
+    );
+
     const response = await fetch(`${deployUrl}/api/now-playing`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      body,
       signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
-      console.warn(`Deploy API error: ${response.status}`);
+      const errorBody = await response.text();
+      console.warn(`Deploy API error: ${response.status} - ${errorBody}`);
       return false;
     }
 

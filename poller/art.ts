@@ -1,8 +1,10 @@
 import { ColorPalette } from "../types.ts";
 import sharp from "sharp";
 
-const ART_TARGET_SIZE = 400;
-const ART_MAX_DIMENSION = 600;
+const ART_TARGET_SIZE = 300;
+const ART_MAX_DIMENSION = 400;
+const JPEG_QUALITY = 75;
+const MAX_BASE64_SIZE = 50000;
 
 export interface ArtResult {
   base64: string;
@@ -165,13 +167,13 @@ export async function fetchAndResizeArt(
           fit: "inside",
           withoutEnlargement: true,
         })
-        .jpeg({ quality: 85, progressive: true });
+        .jpeg({ quality: JPEG_QUALITY, progressive: true });
 
       resizedBuffer = await pipeline.toBuffer();
       statsBuffer = resizedBuffer;
     } else {
       const pipeline = sharp(imageBuffer)
-        .jpeg({ quality: 85, progressive: true });
+        .jpeg({ quality: JPEG_QUALITY, progressive: true });
 
       resizedBuffer = await pipeline.toBuffer();
       statsBuffer = imageBuffer;
@@ -180,10 +182,16 @@ export async function fetchAndResizeArt(
     const [stats, tinyRaw] = await Promise.all([
       sharp(statsBuffer).stats(),
       sharp(imageBuffer)
-        .resize(24, 24, { fit: "cover", withoutEnlargement: true })
+        .resize(24, 24, { fit: "cover" })
+        .flatten({ background: { r: 0, g: 0, b: 0 } })
         .raw()
         .toBuffer({ resolveWithObject: true }),
     ]);
+
+    if (!stats.channels || stats.channels.length < 3) {
+      console.warn("Album art: insufficient color channels");
+      return null;
+    }
 
     const dominant = extractDominantColor(stats);
     const accent = calculateAccentColor(dominant);
@@ -199,7 +207,32 @@ export async function fetchAndResizeArt(
       0.10,
     );
 
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(resizedBuffer)));
+    let binary = "";
+    const chunkSize = 0x8000;
+    const buffer = new Uint8Array(resizedBuffer);
+    for (let i = 0; i < buffer.length; i += chunkSize) {
+      const chunk = buffer.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    let base64 = btoa(binary);
+
+    if (base64.length > MAX_BASE64_SIZE) {
+      const finalPipeline = sharp(imageBuffer)
+        .resize(ART_TARGET_SIZE, ART_TARGET_SIZE, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .jpeg({ quality: JPEG_QUALITY, progressive: true });
+
+      const finalBuffer = await finalPipeline.toBuffer();
+      binary = "";
+      const finalUint8 = new Uint8Array(finalBuffer);
+      for (let i = 0; i < finalUint8.length; i += chunkSize) {
+        const chunk = finalUint8.subarray(i, i + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+      base64 = btoa(binary);
+    }
 
     return {
       base64,

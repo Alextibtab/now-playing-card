@@ -46,13 +46,16 @@ async function handlePostNowPlaying(
   }
 
   try {
-    const data = await req.json() as NowPlayingData;
+    const text = await req.text();
+    console.log(`Received POST: ${text.length} chars`);
+    const data = JSON.parse(text) as NowPlayingData;
     await storeNowPlaying(kv, data);
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (_error) {
+  } catch (error) {
+    console.error("JSON parse error:", error);
     return new Response(JSON.stringify({ error: "Invalid JSON" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
