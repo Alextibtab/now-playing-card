@@ -16,8 +16,8 @@ A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
 
 ---
 
-**[<kbd><br> Setup <br></kbd>][Setup]**
-**[<kbd><br> Config <br></kbd>][Config]**
+**[<kbd> <br> Setup <br> </kbd>][Setup]**
+**[<kbd> <br> Config <br> </kbd>][Config]**
 
 ---
 
