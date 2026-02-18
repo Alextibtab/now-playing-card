@@ -32,10 +32,10 @@ A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
 
 [Deno]: https://deno.land
 [License]: LICENSE
-[Setup]: https://github.com/AlexTibTab/tauon-now-playing/wiki/Setup
-[Configure]: https://github.com/AlexTibTab/tauon-now-playing/wiki/Configure
+[Setup]: https://github.com/Alextibtab/tauon-now-playing/wiki/Setup
+[Configure]: https://github.com/Alextibtab/tauon-now-playing/wiki/Configure
 
 <!----------------------------------{ Badges }--------------------------------->
 
 [Deno Badge]: https://img.shields.io/badge/Deno-2.x-black?logo=deno
-[License Badge]: https://img.shields.io/github/license/AlexTibTab/tauon-now-playing
+[License Badge]: https://img.shields.io/github/license/Alextibtab/tauon-now-playing
