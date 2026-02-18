@@ -2,7 +2,6 @@
   "tasks": {
     "dev": "deno run --watch --allow-net --allow-env --allow-read --unstable-kv server.ts",
     "poll": "deno run --allow-net --allow-env --allow-ffi --allow-read poller.ts",
-    "deploy": "deployctl deploy --project=tauon-now-playing --allow-read server.ts",
     "check": "deno check server.ts poller.ts svg.ts types.ts",
     "fmt": "deno fmt"
   },
@@ -14,5 +13,9 @@
     "exclude": ["README.md"]
   },
   "unstable": ["kv"],
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "auto",
+  "deploy": {
+    "org": "alextibtab",
+    "app": "tauon-now-playing"
+  }
 }

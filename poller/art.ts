@@ -1,7 +1,10 @@
 import { ColorPalette } from "../types.ts";
 import sharp from "sharp";
 
-const ART_TARGET_SIZE = 400;
+const ART_TARGET_SIZE = 300;
+const ART_MAX_DIMENSION = 400;
+const JPEG_QUALITY = 75;
+const MAX_BASE64_SIZE = 50000;
 
 export interface ArtResult {
   base64: string;
@@ -146,30 +149,49 @@ export async function fetchAndResizeArt(
 
     const imageBuffer = new Uint8Array(await response.arrayBuffer());
 
-    const baseSharp = sharp(imageBuffer);
-    const metadata = await baseSharp.metadata();
-    const shouldDownscale = Boolean(
-      metadata.width && metadata.height &&
-        (metadata.width > ART_TARGET_SIZE || metadata.height > ART_TARGET_SIZE),
-    );
-    const sharpInstance = shouldDownscale
-      ? baseSharp.resize(ART_TARGET_SIZE, ART_TARGET_SIZE, {
-        fit: "cover",
-        position: "center",
-      })
-      : baseSharp.clone();
-    sharpInstance.jpeg({ quality: 85, progressive: true });
+    const metadata = await sharp(imageBuffer).metadata();
 
-    const [resizedBuffer, stats, tinyRaw] = await Promise.all([
-      sharpInstance.toBuffer(),
-      sharpInstance.clone().stats(),
-      sharpInstance.clone().resize(24, 24, {
-        fit: "cover",
-        withoutEnlargement: true,
-      }).raw().toBuffer({
-        resolveWithObject: true,
-      }),
+    if (!metadata.width || !metadata.height) {
+      console.warn("Album art: could not read dimensions");
+      return null;
+    }
+
+    const maxDim = Math.max(metadata.width, metadata.height);
+
+    let resizedBuffer: Uint8Array;
+    let statsBuffer: Uint8Array;
+
+    if (maxDim > ART_MAX_DIMENSION) {
+      const pipeline = sharp(imageBuffer)
+        .resize(ART_TARGET_SIZE, ART_TARGET_SIZE, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .jpeg({ quality: JPEG_QUALITY, progressive: true });
+
+      resizedBuffer = await pipeline.toBuffer();
+      statsBuffer = resizedBuffer;
+    } else {
+      const pipeline = sharp(imageBuffer)
+        .jpeg({ quality: JPEG_QUALITY, progressive: true });
+
+      resizedBuffer = await pipeline.toBuffer();
+      statsBuffer = imageBuffer;
+    }
+
+    const [stats, tinyRaw] = await Promise.all([
+      sharp(statsBuffer).stats(),
+      sharp(imageBuffer)
+        .resize(24, 24, { fit: "cover" })
+        .flatten({ background: { r: 0, g: 0, b: 0 } })
+        .raw()
+        .toBuffer({ resolveWithObject: true }),
     ]);
+
+    if (!stats.channels || stats.channels.length < 3) {
+      console.warn("Album art: insufficient color channels");
+      return null;
+    }
 
     const dominant = extractDominantColor(stats);
     const accent = calculateAccentColor(dominant);
@@ -185,7 +207,32 @@ export async function fetchAndResizeArt(
       0.10,
     );
 
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(resizedBuffer)));
+    let binary = "";
+    const chunkSize = 0x8000;
+    const buffer = new Uint8Array(resizedBuffer);
+    for (let i = 0; i < buffer.length; i += chunkSize) {
+      const chunk = buffer.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    let base64 = btoa(binary);
+
+    if (base64.length > MAX_BASE64_SIZE) {
+      const finalPipeline = sharp(imageBuffer)
+        .resize(ART_TARGET_SIZE, ART_TARGET_SIZE, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .jpeg({ quality: JPEG_QUALITY, progressive: true });
+
+      const finalBuffer = await finalPipeline.toBuffer();
+      binary = "";
+      const finalUint8 = new Uint8Array(finalBuffer);
+      for (let i = 0; i < finalUint8.length; i += chunkSize) {
+        const chunk = finalUint8.subarray(i, i + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+      base64 = btoa(binary);
+    }
 
     return {
       base64,

@@ -57,19 +57,21 @@ async function poll(): Promise<void> {
   const hasCachedArt = albumName.length > 0 && albumName === lastAlbumName &&
     lastArtBase64 && lastColors;
 
-  if (isPlayableStatus && status.id > 0 && albumName.length > 0) {
-    if (!hasCachedArt) {
+  if (isPlayableStatus && status.id > 0) {
+    if (hasCachedArt) {
+      artBase64 = lastArtBase64;
+      colors = lastColors;
+    } else {
       const artResult = await fetchAndResizeArt(TAUON_URL, status.id);
       if (artResult) {
         artBase64 = artResult.base64;
         colors = artResult.colors;
-        lastAlbumName = albumName;
-        lastArtBase64 = artBase64;
-        lastColors = colors;
+        if (albumName.length > 0) {
+          lastAlbumName = albumName;
+          lastArtBase64 = artBase64;
+          lastColors = colors;
+        }
       }
-    } else {
-      artBase64 = lastArtBase64;
-      colors = lastColors;
     }
   }
 
