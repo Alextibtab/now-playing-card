@@ -13,8 +13,8 @@ A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
 
 ---
 
-**[<kbd> <br> Quick Start <br> </kbd>][Quick Start]**
-**[<kbd> <br> Configure <br> </kbd>][Configure]**
+**[<kbd> <br> Quick Start <br> </kbd>][Quick Start]** 
+**[<kbd> <br> Configure <br> </kbd>][Configure]**
 
 ---
 <br>
