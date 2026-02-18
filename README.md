@@ -2,8 +2,7 @@
 
 # Tauon Now Playing
 
-[![Deno][Deno Badge]][Deno]
-[![License][License Badge]][License]
+[![Deno][Deno Badge]][Deno] [![License][License Badge]][License]
 
 <br>
 
@@ -17,8 +16,8 @@ A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
 
 ---
 
-[<kbd> Setup </kbd>][Setup]
-[<kbd> Config </kbd>][Config]
+**[<kbd> <br> Setup <br> </kbd>][Setup]** 
+**[<kbd> <br> Config <br> </kbd>][Config]**
 
 ---
 
