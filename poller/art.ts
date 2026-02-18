@@ -154,8 +154,8 @@ export async function fetchAndResizeArt(
     );
     const sharpInstance = shouldDownscale
       ? baseSharp.resize(ART_TARGET_SIZE, ART_TARGET_SIZE, {
-        fit: 'cover',
-        position: 'center',
+        fit: "cover",
+        position: "center",
       })
       : baseSharp.clone();
     sharpInstance.jpeg({ quality: 85, progressive: true });
@@ -164,7 +164,7 @@ export async function fetchAndResizeArt(
       sharpInstance.toBuffer(),
       sharpInstance.clone().stats(),
       sharpInstance.clone().resize(24, 24, {
-        fit: 'cover',
+        fit: "cover",
         withoutEnlargement: true,
       }).raw().toBuffer({
         resolveWithObject: true,

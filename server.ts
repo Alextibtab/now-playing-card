@@ -149,8 +149,9 @@ function parseBooleanParam(value: string | null): boolean | undefined {
   return undefined;
 }
 
-function parseTextAlign(value: string | null): "left" | "center" | "right" |
-  undefined {
+function parseTextAlign(
+  value: string | null,
+): "left" | "center" | "right" | undefined {
   if (!value) return undefined;
   const normalized = value.trim().toLowerCase();
   if (normalized === "left") return "left";

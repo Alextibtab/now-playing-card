@@ -88,7 +88,7 @@ export function generateNowPlayingSvg(
     10,
     Math.floor(textAreaWidth / (albumFontSize * 0.55)),
   );
-  const fontFallback = config.fontFallback || 'sans-serif';
+  const fontFallback = config.fontFallback || "sans-serif";
   const fontTitleFamily = config.fontTitleFamily
     ? `'${config.fontTitleFamily}', ${fontFallback}`
     : fontFallback;
@@ -100,26 +100,26 @@ export function generateNowPlayingSvg(
       ? `@font-face {
   font-family: '${config.fontTitleFamily}';
   src: url(${config.fontTitleDataUrl}) format('${
-        config.fontTitleFormat || 'truetype'
+        config.fontTitleFormat || "truetype"
       }');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }`
-      : '',
+      : "",
     config.fontBodyDataUrl && config.fontBodyFamily
       ? `@font-face {
   font-family: '${config.fontBodyFamily}';
   src: url(${config.fontBodyDataUrl}) format('${
-        config.fontBodyFormat || 'truetype'
+        config.fontBodyFormat || "truetype"
       }');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }`
-      : '',
-  ].filter(Boolean).join('\n');
-  const styleBlock = fontFaces ? `<style>${fontFaces}</style>` : '';
+      : "",
+  ].filter(Boolean).join("\n");
+  const styleBlock = fontFaces ? `<style>${fontFaces}</style>` : "";
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -212,53 +212,71 @@ export function generateNowPlayingSvg(
     ${
     hasTrack
       ? `
-    ${config.showStatus ? `
+    ${
+        config.showStatus
+          ? `
     <!-- Status pill -->
     <text x="${textX}" y="${
-        albumY + 18
-      }" fill="${highlight}" font-size="12" font-weight="700" letter-spacing="0.12em" filter="url(#textGlow)" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
+            albumY + 18
+          }" fill="${highlight}" font-size="12" font-weight="700" letter-spacing="0.12em" filter="url(#textGlow)" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
       ${isStale ? "LAST PLAYED" : isPlaying ? "NOW PLAYING" : "PAUSED"}
     </text>
-    ` : ""}
+    `
+          : ""
+      }
 
-    ${config.showTitle ? `
+    ${
+        config.showTitle
+          ? `
     <!-- Title -->
     ${
-        titleScrollNeeded
-          ? `
+            titleScrollNeeded
+              ? `
     <g clip-path="url(#titleClip)">
       <g>
         <text x="${textAreaLeft}" y="${titleY}" fill="${config.textPrimary}" font-size="${titleFontSize}" font-weight="600" filter="url(#textGlow)" font-family="${fontTitleFamily}">
           ${escapeXml(data.title)}
         </text>
-        <text x="${textAreaLeft + titleScrollDistance}" y="${titleY}" fill="${config.textPrimary}" font-size="${titleFontSize}" font-weight="600" filter="url(#textGlow)" font-family="${fontTitleFamily}">
+        <text x="${
+                textAreaLeft + titleScrollDistance
+              }" y="${titleY}" fill="${config.textPrimary}" font-size="${titleFontSize}" font-weight="600" filter="url(#textGlow)" font-family="${fontTitleFamily}">
           ${escapeXml(data.title)}
         </text>
         <animateTransform attributeName="transform" type="translate" from="0 0" to="-${titleScrollDistance} 0" dur="15s" repeatCount="indefinite" />
       </g>
     </g>
     `
-          : `
+              : `
     <text x="${textX}" y="${titleY}" fill="${config.textPrimary}" font-size="${titleFontSize}" font-weight="600" text-overflow="ellipsis" filter="url(#textGlow)" text-anchor="${textAnchor}" font-family="${fontTitleFamily}">
       ${escapeXml(truncateText(data.title, titleMaxChars))}
     </text>
     `
+          }
+    `
+          : ""
       }
-    ` : ""}
 
-    ${config.showArtist ? `
+    ${
+        config.showArtist
+          ? `
     <!-- Artist -->
     <text x="${textX}" y="${artistY}" fill="${config.textSecondary}" font-size="${artistFontSize}" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
       ${escapeXml(truncateText(data.artist, artistMaxChars))}
     </text>
-    ` : ""}
+    `
+          : ""
+      }
 
-    ${config.showAlbum ? `
+    ${
+        config.showAlbum
+          ? `
     <!-- Album and status -->
     <text x="${textX}" y="${albumYPos}" fill="${config.textMuted}" font-size="${albumFontSize}" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
       ${escapeXml(truncateText(data.album, albumMaxChars))}
     </text>
-    ` : ""}
+    `
+          : ""
+      }
     `
       : `
     <!-- Not playing message -->
