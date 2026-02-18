@@ -132,5 +132,8 @@ deno task deploy
 ## Notes
 
 - The poller uses `sharp` and requires `--allow-ffi`.
+
+<!-- Test change for PR-Agent workflow verification -->
+
 - GitHub caches images, but the SVG uses `Cache-Control: s-maxage=1` for faster
   refresh when reloading the page.
