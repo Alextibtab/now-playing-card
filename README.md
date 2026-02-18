@@ -9,11 +9,13 @@
 <br>
 
 A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
+
+<a href="https://console.deno.com/new?clone=https://github.com/Alextibtab/tauon-now-playing"><img align="center" src="https://deno.com/button" alt="Deploy on Deno"/></a>
 <br>
 
 ---
 
-**[<kbd> <br> Setup <br> </kbd>][Setup]** 
+**[<kbd> <br> Setup <br> </kbd>][Setup]**
 **[<kbd> <br> Configure <br> </kbd>][Configure]**
 
 ---
