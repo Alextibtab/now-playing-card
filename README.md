@@ -3,23 +3,21 @@
 # Tauon Now Playing
 
 [![Deno][Deno Badge]][Deno] [![License][License Badge]][License]
-
 <br>
 
 ![Now Playing Widget](https://tauon-now-playing.alextibtab.deno.net/now-playing.svg)
-
 <br>
 
 A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
-
 <br>
 
 ---
 
-**[<kbd> <br> Setup <br> </kbd>][Setup]**
-**[<kbd> <br> Config <br> </kbd>][Config]**
+**[<kbd><br> Setup <br></kbd>][Setup]**
+**[<kbd><br> Config <br></kbd>][Config]**
 
 ---
+<br>
 
 </div>
 
