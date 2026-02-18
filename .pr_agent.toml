@@ -1,0 +1,10 @@
+[config]
+model = "gpt-5.2-codex"
+
+[pr_reviewer]
+extra_instructions = "Focus on TypeScript/Deno best practices, error handling, and security."
+
+[github_action_config]
+auto_review = true
+auto_describe = true
+auto_improve = true
