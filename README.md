@@ -13,8 +13,8 @@ A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
 
 ---
 
-**[<kbd> <br> Quick Start <br> </kbd>][Setup]**
-**[<kbd> <br> Configure <br> </kbd>][Config]**
+**[<kbd> <br> Quick Start <br> </kbd>][Quick Start]**
+**[<kbd> <br> Configure <br> </kbd>][Configure]**
 
 ---
 <br>
@@ -32,8 +32,8 @@ A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
 
 [Deno]: https://deno.land
 [License]: LICENSE
-[Setup]: https://github.com/AlexTibTab/tauon-now-playing/wiki/Setup
-[Config]: https://github.com/AlexTibTab/tauon-now-playing/wiki/Config
+[Quick Start]: https://github.com/AlexTibTab/tauon-now-playing/wiki/Setup
+[Configure]: https://github.com/AlexTibTab/tauon-now-playing/wiki/Config
 
 <!----------------------------------{ Badges }--------------------------------->
 
