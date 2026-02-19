@@ -55,16 +55,14 @@ export interface NowPlayingData {
 export type VisualisationType =
   | "waveform"
   | "equalizer"
-  | "rings"
-  | "particles"
-  | "vinyl";
+  | "orbs"
+  | "particles";
 
 export const VISUALISATION_TYPES: readonly VisualisationType[] = [
   "waveform",
   "equalizer",
-  "rings",
+  "orbs",
   "particles",
-  "vinyl",
 ];
 
 export interface SvgConfig {

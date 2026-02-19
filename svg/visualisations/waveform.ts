@@ -27,6 +27,7 @@ export function renderWaveform(params: VisualParams): VisualOutput {
     height,
     seed * 0.03,
     30,
+    isPlaying,
   );
 
   const bgLayer2 = generateWaveformLayer(
@@ -38,6 +39,7 @@ export function renderWaveform(params: VisualParams): VisualOutput {
     height * 0.7,
     seed * 0.05 + 4.1,
     60,
+    isPlaying,
   );
 
   const fgLayer = isPlaying

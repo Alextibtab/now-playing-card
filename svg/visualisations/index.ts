@@ -6,16 +6,14 @@ import type {
 } from "./types.ts";
 import { renderWaveform } from "./waveform.ts";
 import { renderEqualizer } from "./equalizer.ts";
-import { renderRings } from "./rings.ts";
+import { renderOrbs } from "./orbs.ts";
 import { renderParticles } from "./particles.ts";
-import { renderVinyl } from "./vinyl.ts";
 
 const renderers: Record<VisualisationType, VisualisationRenderer> = {
   waveform: renderWaveform,
   equalizer: renderEqualizer,
-  rings: renderRings,
+  orbs: renderOrbs,
   particles: renderParticles,
-  vinyl: renderVinyl,
 };
 
 /**
