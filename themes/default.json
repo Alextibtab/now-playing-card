@@ -18,5 +18,6 @@
   "fontBodyFamily": "Space Mono",
   "fontTitleFile": "DotGothic16-Regular.ttf",
   "fontBodyFile": "SpaceMono-Regular.ttf",
-  "fontFallback": "'Segoe UI', sans-serif"
+  "fontFallback": "'Segoe UI', sans-serif",
+  "visualisation": "waveform"
 }

@@ -52,6 +52,21 @@ export interface NowPlayingData {
   updatedAt: number;
 }
 
+export type VisualisationType =
+  | "waveform"
+  | "equalizer"
+  | "rings"
+  | "particles"
+  | "vinyl";
+
+export const VISUALISATION_TYPES: readonly VisualisationType[] = [
+  "waveform",
+  "equalizer",
+  "rings",
+  "particles",
+  "vinyl",
+];
+
 export interface SvgConfig {
   width: number;
   height: number;
@@ -77,6 +92,7 @@ export interface SvgConfig {
   fontBodyDataUrl?: string;
   fontTitleFormat?: string;
   fontBodyFormat?: string;
+  visualisation: VisualisationType;
 }
 
 export const defaultSvgConfig: SvgConfig = {
@@ -100,4 +116,5 @@ export const defaultSvgConfig: SvgConfig = {
   fontTitleFile: "DotGothic16-Regular.ttf",
   fontBodyFile: "SpaceMono-Regular.ttf",
   fontFallback: "'Segoe UI', sans-serif",
+  visualisation: "waveform",
 };
