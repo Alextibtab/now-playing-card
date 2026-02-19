@@ -1,4 +1,5 @@
 import { ColorPalette } from "../types.ts";
+import { encodeBase64 } from "@std/encoding";
 import sharp from "sharp";
 
 const ART_TARGET_SIZE = 300;
@@ -207,14 +208,7 @@ export async function fetchAndResizeArt(
       0.10,
     );
 
-    let binary = "";
-    const chunkSize = 0x8000;
-    const buffer = new Uint8Array(resizedBuffer);
-    for (let i = 0; i < buffer.length; i += chunkSize) {
-      const chunk = buffer.subarray(i, i + chunkSize);
-      binary += String.fromCharCode(...chunk);
-    }
-    let base64 = btoa(binary);
+    let base64 = encodeBase64(resizedBuffer);
 
     if (base64.length > MAX_BASE64_SIZE) {
       const finalPipeline = sharp(imageBuffer)
@@ -225,13 +219,7 @@ export async function fetchAndResizeArt(
         .jpeg({ quality: JPEG_QUALITY, progressive: true });
 
       const finalBuffer = await finalPipeline.toBuffer();
-      binary = "";
-      const finalUint8 = new Uint8Array(finalBuffer);
-      for (let i = 0; i < finalUint8.length; i += chunkSize) {
-        const chunk = finalUint8.subarray(i, i + chunkSize);
-        binary += String.fromCharCode(...chunk);
-      }
-      base64 = btoa(binary);
+      base64 = encodeBase64(finalBuffer);
     }
 
     return {
