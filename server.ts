@@ -5,6 +5,7 @@ import {
   VISUALISATION_TYPES,
   VisualisationType,
 } from "./types.ts";
+import { encodeBase64 } from "@std/encoding";
 import { generateNowPlayingSvg } from "./svg.ts";
 
 const API_KEY = Deno.env.get("API_KEY");
@@ -130,13 +131,7 @@ async function loadFontData(
   try {
     const fontUrl = new URL(`./fonts/${fileName}`, import.meta.url);
     const data = await Deno.readFile(fontUrl);
-    let binary = "";
-    const chunkSize = 0x8000;
-    for (let i = 0; i < data.length; i += chunkSize) {
-      const chunk = data.subarray(i, i + chunkSize);
-      binary += String.fromCharCode(...chunk);
-    }
-    const base64 = btoa(binary);
+    const base64 = encodeBase64(data);
     const mime = format === "woff2"
       ? "font/woff2"
       : format === "woff"
