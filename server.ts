@@ -1,4 +1,10 @@
-import { defaultSvgConfig, NowPlayingData, SvgConfig } from "./types.ts";
+import {
+  defaultSvgConfig,
+  NowPlayingData,
+  SvgConfig,
+  VISUALISATION_TYPES,
+  VisualisationType,
+} from "./types.ts";
 import { generateNowPlayingSvg } from "./svg.ts";
 
 const API_KEY = Deno.env.get("API_KEY");
@@ -94,7 +100,11 @@ function isSvgConfig(value: unknown): value is SvgConfig {
     isString(config.fontBodyFamily) &&
     isString(config.fontTitleFile) &&
     isString(config.fontBodyFile) &&
-    isString(config.fontFallback);
+    isString(config.fontFallback) &&
+    (config.visualisation === undefined ||
+      VISUALISATION_TYPES.includes(
+        config.visualisation as VisualisationType,
+      ));
 }
 
 function getFontFormat(fileName: string): string | null {
@@ -224,6 +234,11 @@ async function buildSvgConfig(params: URLSearchParams): Promise<SvgConfig> {
   const showTitle = parseBooleanParam(params.get("showTitle"));
   const showArtist = parseBooleanParam(params.get("showArtist"));
   const showAlbum = parseBooleanParam(params.get("showAlbum"));
+  const visParam = params.get("vis");
+  const visualisation = visParam &&
+      VISUALISATION_TYPES.includes(visParam as VisualisationType)
+    ? visParam as VisualisationType
+    : undefined;
   const fontTitleFile = parseFontFile(params.get("fontTitle"));
   const fontBodyFile = parseFontFile(params.get("fontBody"));
   const fontTitleFamilyParam = parseFontFamily(params.get("fontTitleFamily"));
@@ -241,6 +256,7 @@ async function buildSvgConfig(params: URLSearchParams): Promise<SvgConfig> {
     ...(showTitle !== undefined ? { showTitle } : {}),
     ...(showArtist !== undefined ? { showArtist } : {}),
     ...(showAlbum !== undefined ? { showAlbum } : {}),
+    ...(visualisation ? { visualisation } : {}),
     ...(fontTitleFile ? { fontTitleFile } : {}),
     ...(fontBodyFile ? { fontBodyFile } : {}),
     ...(fontTitleFamily ? { fontTitleFamily } : {}),
@@ -283,11 +299,25 @@ async function handleGetNowPlaying(kv: Deno.Kv): Promise<Response> {
   });
 }
 
-async function handleGetPreview(req: Request, kv: Deno.Kv): Promise<Response> {
-  const data = await getNowPlaying(kv);
+function handleGetPreview(req: Request): Response {
   const params = new URL(req.url).searchParams;
-  const config = await buildSvgConfig(params);
-  const svg = generateNowPlayingSvg(data, config);
+
+  // Forward any extra query params (theme, fonts, etc.) to each SVG src
+  const extraParams = new URLSearchParams(params);
+  extraParams.delete("vis");
+  const extraStr = extraParams.toString();
+  const suffix = extraStr ? `&${extraStr}` : "";
+
+  const widgets = VISUALISATION_TYPES.map(
+    (vis) =>
+      `<div class="widget-section">
+        <h2>${vis}</h2>
+        <div class="widget">
+          <img src="/now-playing.svg?vis=${vis}${suffix}" alt="${vis} visualisation" />
+        </div>
+      </div>`,
+  );
+
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -306,46 +336,37 @@ async function handleGetPreview(req: Request, kv: Deno.Kv): Promise<Response> {
         max-width: 900px;
         margin: 0 auto;
       }
-      .card {
+      .widget-section {
         background: #0f1115;
         border: 1px solid #1f2430;
         border-radius: 16px;
         padding: 24px;
+        margin-bottom: 24px;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
       }
+      .widget-section h2 {
+        margin: 0 0 16px;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #94a3b8;
+      }
       .widget {
-        margin-top: 24px;
         width: 100%;
         display: flex;
         justify-content: center;
       }
-      .widget svg {
+      .widget img {
         display: block;
         width: 800px;
         height: auto;
-      }
-      p {
-        line-height: 1.7;
-        color: #cbd5f5;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="card">
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sed
-          tincidunt lorem. Donec semper, magna in pretium consequat, lorem orci
-          pharetra neque, sed feugiat sapien mi sed urna. Mauris lacinia justo
-          a mi consequat, a luctus lorem suscipit.
-        </p>
-        <p>
-          Pellentesque habitant morbi tristique senectus et netus et malesuada
-          fames ac turpis egestas. Nulla facilisi. Fusce at lectus erat. Sed
-          posuere lorem eget nisl interdum, id condimentum felis tincidunt.
-        </p>
-        <div class="widget">${svg}</div>
-      </div>
+      ${widgets.join("\n      ")}
     </div>
   </body>
 </html>`;
@@ -379,7 +400,7 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
     if (path === "/now-playing.svg" && req.method === "GET") {
       response = await handleGetSvg(req, kv);
     } else if (path === "/preview" && req.method === "GET") {
-      response = await handleGetPreview(req, kv);
+      response = handleGetPreview(req);
     } else if (path === "/api/now-playing" && req.method === "POST") {
       response = await handlePostNowPlaying(req, kv);
     } else if (path === "/api/now-playing" && req.method === "GET") {

@@ -2,7 +2,8 @@ import { defaultSvgConfig, NowPlayingData, SvgConfig } from "../types.ts";
 import { mixColors } from "./colors.ts";
 import { generateMusicNotePlaceholder } from "./icons.ts";
 import { escapeXml, estimateTextWidth, truncateText } from "./text.ts";
-import { generateWaveformLayer, hashString } from "./waves.ts";
+import { hashString } from "./visualisations/waves.ts";
+import { renderVisualisation } from "./visualisations/index.ts";
 
 /**
  * Build the SVG widget for the current playback state.
@@ -58,7 +59,7 @@ export function generateNowPlayingSvg(
   const barsStartX = 2;
   const barsEndX = width - 2;
   const waveBaseY = height - 2;
-  const waveHeight = 170;
+  const waveHeight = 180;
   const titleFontSize = 24;
   const artistFontSize = 15;
   const albumFontSize = 13;
@@ -121,6 +122,17 @@ export function generateNowPlayingSvg(
   ].filter(Boolean).join("\n");
   const styleBlock = fontFaces ? `<style>${fontFaces}</style>` : "";
 
+  const vis = renderVisualisation(config.visualisation, {
+    startX: barsStartX,
+    endX: barsEndX,
+    baseY: waveBaseY,
+    height: waveHeight,
+    seed: titleSeed,
+    isPlaying: !!isPlaying,
+    highlight,
+    accent: accentColor,
+  });
+
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
@@ -130,7 +142,7 @@ export function generateNowPlayingSvg(
       <stop offset="60%" stop-color="${midDark}" />
       <stop offset="100%" stop-color="${baseDark}" />
     </linearGradient>
-    <linearGradient id="barsFade" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="visFade" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="${highlight}" stop-opacity="1" />
       <stop offset="100%" stop-color="${accentColor}" stop-opacity="0.3" />
     </linearGradient>
@@ -154,6 +166,7 @@ export function generateNowPlayingSvg(
     <filter id="textGlow" x="-50%" y="-50%" width="200%" height="200%">
       <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="${highlight}" flood-opacity="0.6" />
     </filter>
+    ${vis.defs}
   </defs>
 
   <!-- Card background with clean rounded border -->
@@ -162,50 +175,8 @@ export function generateNowPlayingSvg(
     config.borderRadius - 2
   }" fill="url(#cardGradient)" />
 
-  <!-- Background waveform -->
-  <g fill="url(#barsFade)" opacity="0.4" clip-path="url(#cardClip)">
-    ${
-    generateWaveformLayer(
-      highlight,
-      0.28,
-      barsStartX,
-      barsEndX,
-      waveBaseY,
-      waveHeight,
-      titleSeed * 0.03,
-      8,
-    )
-  }
-    ${
-    generateWaveformLayer(
-      highlight,
-      0.18,
-      barsStartX,
-      barsEndX,
-      waveBaseY,
-      waveHeight * 0.7,
-      titleSeed * 0.05 + 4.1,
-      12,
-    )
-  }
-  </g>
-
-  ${
-    isPlaying
-      ? `<g fill="url(#barsFade)" opacity="0.45" clip-path="url(#cardClip)">${
-        generateWaveformLayer(
-          highlight,
-          0.65,
-          barsStartX,
-          barsEndX,
-          waveBaseY,
-          waveHeight * 0.85,
-          titleSeed * 0.08 + 8.2,
-          5,
-        )
-      }</g>`
-      : ""
-  }
+  <!-- Visualisation -->
+  ${vis.body}
 
   <!-- Text content -->
   <g font-family="${fontBodyFamily}">

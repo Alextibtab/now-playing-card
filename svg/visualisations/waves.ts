@@ -72,9 +72,13 @@ export function generateWaveformLayer(
   height: number,
   seed: number,
   duration: number,
+  animate = true,
 ): string {
-  const pathA = generateWavePath(startX, endX, baseY, height, 28, seed);
-  const pathB = generateWavePath(startX, endX, baseY, height, 28, seed + 2.5);
+  const pathA = generateWavePath(startX, endX, baseY, height, 12, seed);
+  if (!animate) {
+    return `<path d="${pathA}" fill="${color}" opacity="${opacity}" />`;
+  }
+  const pathB = generateWavePath(startX, endX, baseY, height, 12, seed + 8.5);
   return `<path d="${pathA}" fill="${color}" opacity="${opacity}">
     <animate attributeName="d" values="${pathA};${pathB};${pathA}" dur="${duration}s" repeatCount="indefinite" />
   </path>`;
