@@ -145,7 +145,7 @@ export async function fetchAndResizeArt(
       tiny,
       dominant,
     );
-    const fallbackHighlight = extractFallbackHighlight(image);
+    const fallbackHighlight = extractFallbackHighlight(tiny);
     const highlight = blendWithWhite(
       highlightCandidate || fallbackHighlight,
       0.10,
