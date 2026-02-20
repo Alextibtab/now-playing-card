@@ -75,7 +75,8 @@ function extractFallbackHighlight(image: Image): string {
   let maxB = 0;
 
   for (const [, , color] of image.iterateWithColors()) {
-    const [r, g, b] = Image.colorToRGBA(color);
+    const [r, g, b, a] = Image.colorToRGBA(color);
+    if (a < 128) continue;
     if (r > maxR) maxR = r;
     if (g > maxG) maxG = g;
     if (b > maxB) maxB = b;
