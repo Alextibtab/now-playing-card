@@ -1,20 +1,19 @@
 {
   "tasks": {
     "dev": "deno run --watch --allow-net --allow-env --allow-read --unstable-kv server.ts",
-    "poll": "deno run --allow-net --allow-env --allow-ffi --allow-read poller.ts",
+    "poll": "deno run --allow-net --allow-env --allow-read poller.ts",
     "check": "deno check server.ts poller.ts svg.ts types.ts",
     "fmt": "deno fmt"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
     "@std/encoding": "jsr:@std/encoding@1",
-    "sharp": "npm:sharp@^0.33.5"
+    "imagescript": "jsr:@matmen/imagescript@1"
   },
   "fmt": {
     "exclude": ["README.md"]
   },
   "unstable": ["kv"],
-  "nodeModulesDir": "auto",
   "deploy": {
     "org": "alextibtab",
     "app": "tauon-now-playing"
