@@ -8,7 +8,14 @@ import {
 import { encodeBase64 } from "@std/encoding";
 import { generateNowPlayingSvg } from "./svg.ts";
 
-const editorCache: { html: string | null } = { html: null };
+const editorCache: { template: string | null } = { template: null };
+
+/** Generate a cryptographic random base64-encoded nonce for CSP headers. */
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return encodeBase64(bytes);
+}
 
 const API_KEY = Deno.env.get("API_KEY");
 if (!API_KEY) {
@@ -20,6 +27,7 @@ const KV_KEY = ["now-playing"];
 const THEME_NAME_PATTERN = /^[a-z0-9_-]+$/i;
 const FONT_FILE_PATTERN = /^[a-z0-9._-]+$/i;
 const FONT_FAMILY_PATTERN = /^[a-z0-9 _-]+$/i;
+const FONT_FALLBACK_PATTERN = /^[a-z0-9 _,'-]+$/i;
 const themeCache = new Map<string, SvgConfig>();
 const fontCache = new Map<string, { dataUrl: string; format: string }>();
 
@@ -391,7 +399,8 @@ function sanitizePreviewConfig(
   }
   if (
     typeof raw.fontFallback === "string" &&
-    raw.fontFallback.length > 0 && raw.fontFallback.length <= 100
+    raw.fontFallback.length > 0 && raw.fontFallback.length <= 100 &&
+    FONT_FALLBACK_PATTERN.test(raw.fontFallback)
   ) {
     config.fontFallback = raw.fontFallback;
   }
@@ -453,20 +462,34 @@ async function handlePreviewRender(req: Request): Promise<Response> {
 
 async function handleGetEditor(): Promise<Response> {
   try {
-    if (!editorCache.html) {
+    if (!editorCache.template) {
       const editorUrl = new URL("./editor.html", import.meta.url);
       let html = await Deno.readTextFile(editorUrl);
       const artUrl = new URL("./assets/sample-art.jpg", import.meta.url);
       const artData = await Deno.readFile(artUrl);
       const artBase64 = encodeBase64(artData);
       html = html.replace("{{SAMPLE_ART_BASE64}}", artBase64);
-      editorCache.html = html;
+      editorCache.template = html;
     }
-    return new Response(editorCache.html, {
+    // Generate a unique nonce per request so CSP blocks any
+    // injected inline scripts/styles that lack the nonce.
+    const nonce = generateNonce();
+    const html = editorCache.template.replaceAll(
+      "{{CSP_NONCE}}",
+      nonce,
+    );
+    return new Response(html, {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-cache",
+        "Content-Security-Policy": `default-src 'none'; ` +
+          `script-src 'nonce-${nonce}'; ` +
+          `style-src 'nonce-${nonce}'; ` +
+          `img-src data:; ` +
+          `font-src data:; ` +
+          `connect-src 'self'`,
+        "X-Frame-Options": "DENY",
       },
     });
   } catch (_error) {
@@ -482,6 +505,7 @@ async function handleGetEditor(): Promise<Response> {
 
 function handleGetPreview(req: Request): Response {
   const params = new URL(req.url).searchParams;
+  const nonce = generateNonce();
 
   // Forward any extra query params (theme, fonts, etc.) to each SVG src
   const extraParams = new URLSearchParams(params);
@@ -505,7 +529,7 @@ function handleGetPreview(req: Request): Response {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Now Playing Preview</title>
-    <style>
+    <style nonce="${nonce}">
       body {
         margin: 0;
         padding: 32px;
@@ -557,6 +581,10 @@ function handleGetPreview(req: Request): Response {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-cache",
+      "Content-Security-Policy": `default-src 'none'; ` +
+        `style-src 'nonce-${nonce}'; ` +
+        `img-src 'self'`,
+      "X-Frame-Options": "DENY",
     },
   });
 }
@@ -617,6 +645,22 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
     const newHeaders = new Headers(response.headers);
     for (const [key, value] of Object.entries(corsHeaders)) {
       newHeaders.set(key, value);
+    }
+
+    // Security headers for all responses
+    newHeaders.set("X-Content-Type-Options", "nosniff");
+
+    // CSP for SVG responses — HTML handlers set their own
+    // nonce-based CSP so we only need to handle SVG here.
+    const contentType = response.headers.get("Content-Type") || "";
+    if (
+      contentType.includes("image/svg+xml") &&
+      !response.headers.has("Content-Security-Policy")
+    ) {
+      newHeaders.set(
+        "Content-Security-Policy",
+        "default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:",
+      );
     }
 
     return new Response(response.body, {

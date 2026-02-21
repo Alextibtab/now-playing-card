@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Now Playing SVG Editor</title>
-    <style>
+    <style nonce="{{CSP_NONCE}}">
       *,
       *::before,
       *::after {
@@ -626,7 +626,8 @@
       </div>
     </div>
 
-    <script>
+    <script nonce="{{CSP_NONCE}}">
+      const CSP_NONCE = "{{CSP_NONCE}}";
       const SAMPLE_ART = "{{SAMPLE_ART_BASE64}}";
 
       const DEFAULT_THEME = {
@@ -1003,6 +1004,11 @@
           if (!sanitized) {
             setStatus("error", "Invalid SVG response");
             return;
+          }
+          // Apply the page nonce to any <style> elements inside the
+          // SVG so the browser's CSP allows the @font-face rules.
+          for (const s of sanitized.querySelectorAll("style")) {
+            s.nonce = CSP_NONCE;
           }
           svgPreview.replaceChildren(sanitized);
           setStatus("ok", "Rendered");
