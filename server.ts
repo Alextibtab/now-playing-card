@@ -487,6 +487,7 @@ async function handleGetEditor(): Promise<Response> {
           `script-src 'nonce-${nonce}'; ` +
           `style-src 'nonce-${nonce}'; ` +
           `img-src data:; ` +
+          `font-src data:; ` +
           `connect-src 'self'`,
         "X-Frame-Options": "DENY",
       },
