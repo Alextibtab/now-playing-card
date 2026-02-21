@@ -708,6 +708,46 @@
       let syncing = false;
       let activeTab = "theme";
 
+      // --- SVG sanitization ---
+
+      function sanitizeSvg(raw) {
+        const doc = new DOMParser().parseFromString(
+          raw,
+          "image/svg+xml",
+        );
+        const errorNode = doc.querySelector("parsererror");
+        if (errorNode) return null;
+
+        const svg = doc.documentElement;
+        if (svg.tagName !== "svg") return null;
+
+        // Remove <script> elements and on* event handlers
+        const walk = (el) => {
+          for (const child of [...el.children]) {
+            if (child.tagName === "script") {
+              child.remove();
+              continue;
+            }
+            for (const attr of [...child.attributes]) {
+              if (attr.name.startsWith("on")) {
+                child.removeAttribute(attr.name);
+              }
+            }
+            walk(child);
+          }
+        };
+        walk(svg);
+
+        // Also strip on* from root <svg> itself
+        for (const attr of [...svg.attributes]) {
+          if (attr.name.startsWith("on")) {
+            svg.removeAttribute(attr.name);
+          }
+        }
+
+        return document.importNode(svg, true);
+      }
+
       // --- Tab switching ---
 
       function switchTab(tab) {
@@ -900,7 +940,12 @@
           }
 
           const svg = await res.text();
-          svgPreview.innerHTML = svg;
+          const sanitized = sanitizeSvg(svg);
+          if (!sanitized) {
+            setStatus("error", "Invalid SVG response");
+            return;
+          }
+          svgPreview.replaceChildren(sanitized);
           setStatus("ok", "Rendered");
         } catch (_e) {
           setStatus("error", "Network error");
