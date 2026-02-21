@@ -296,11 +296,132 @@ async function handleGetNowPlaying(kv: Deno.Kv): Promise<Response> {
   });
 }
 
+const MAX_PREVIEW_BODY = 1024 * 1024; // 1 MB
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function sanitizePreviewConfig(
+  raw: Record<string, unknown>,
+): Partial<SvgConfig> {
+  const config: Partial<SvgConfig> = {};
+
+  if (typeof raw.width === "number" && Number.isFinite(raw.width)) {
+    config.width = clamp(Math.round(raw.width), 200, 1600);
+  }
+  if (typeof raw.height === "number" && Number.isFinite(raw.height)) {
+    config.height = clamp(Math.round(raw.height), 80, 600);
+  }
+  if (typeof raw.albumSize === "number" && Number.isFinite(raw.albumSize)) {
+    config.albumSize = clamp(Math.round(raw.albumSize), 40, 400);
+  }
+  if (
+    typeof raw.borderRadius === "number" && Number.isFinite(raw.borderRadius)
+  ) {
+    config.borderRadius = clamp(Math.round(raw.borderRadius), 0, 64);
+  }
+
+  if (
+    typeof raw.cardBackground === "string" &&
+    HEX_COLOR_PATTERN.test(raw.cardBackground)
+  ) {
+    config.cardBackground = raw.cardBackground;
+  }
+  if (
+    typeof raw.cardBorder === "string" &&
+    HEX_COLOR_PATTERN.test(raw.cardBorder)
+  ) {
+    config.cardBorder = raw.cardBorder;
+  }
+  for (
+    const key of ["textPrimary", "textSecondary", "textMuted"] as const
+  ) {
+    const val = raw[key];
+    if (typeof val === "string" && HEX_COLOR_PATTERN.test(val)) {
+      config[key] = val;
+    }
+  }
+
+  if (raw.albumPosition === "left" || raw.albumPosition === "right") {
+    config.albumPosition = raw.albumPosition;
+  }
+  if (
+    raw.textAlign === "left" || raw.textAlign === "center" ||
+    raw.textAlign === "right"
+  ) {
+    config.textAlign = raw.textAlign;
+  }
+
+  for (
+    const key of ["showStatus", "showTitle", "showArtist", "showAlbum"] as const
+  ) {
+    if (typeof raw[key] === "boolean") {
+      config[key] = raw[key] as boolean;
+    }
+  }
+
+  if (
+    typeof raw.visualisation === "string" &&
+    VISUALISATION_TYPES.includes(raw.visualisation as VisualisationType)
+  ) {
+    config.visualisation = raw.visualisation as VisualisationType;
+  }
+
+  if (
+    typeof raw.fontTitleFile === "string" &&
+    FONT_FILE_PATTERN.test(raw.fontTitleFile)
+  ) {
+    config.fontTitleFile = raw.fontTitleFile;
+    config.fontTitleFamily = typeof raw.fontTitleFamily === "string" &&
+        FONT_FAMILY_PATTERN.test(raw.fontTitleFamily)
+      ? raw.fontTitleFamily
+      : inferFontFamily(raw.fontTitleFile);
+  }
+  if (
+    typeof raw.fontBodyFile === "string" &&
+    FONT_FILE_PATTERN.test(raw.fontBodyFile)
+  ) {
+    config.fontBodyFile = raw.fontBodyFile;
+    config.fontBodyFamily = typeof raw.fontBodyFamily === "string" &&
+        FONT_FAMILY_PATTERN.test(raw.fontBodyFamily)
+      ? raw.fontBodyFamily
+      : inferFontFamily(raw.fontBodyFile);
+  }
+  if (
+    typeof raw.fontFallback === "string" &&
+    raw.fontFallback.length > 0 && raw.fontFallback.length <= 100
+  ) {
+    config.fontFallback = raw.fontFallback;
+  }
+
+  return config;
+}
+
 async function handlePreviewRender(req: Request): Promise<Response> {
+  const contentLength = parseInt(
+    req.headers.get("Content-Length") || "0",
+  );
+  if (contentLength > MAX_PREVIEW_BODY) {
+    return new Response(
+      JSON.stringify({ error: "Request body too large" }),
+      { status: 413, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   try {
-    const body = await req.json();
+    const text = await req.text();
+    if (text.length > MAX_PREVIEW_BODY) {
+      return new Response(
+        JSON.stringify({ error: "Request body too large" }),
+        { status: 413, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    const body = JSON.parse(text);
     const data = body.data as NowPlayingData | null;
-    const configOverrides = body.config || {};
+    const configOverrides = sanitizePreviewConfig(body.config || {});
     const baseConfig: SvgConfig = {
       ...defaultSvgConfig,
       ...configOverrides,
