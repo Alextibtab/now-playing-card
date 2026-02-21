@@ -8,6 +8,8 @@ import {
 import { encodeBase64 } from "@std/encoding";
 import { generateNowPlayingSvg } from "./svg.ts";
 
+const editorCache: { html: string | null } = { html: null };
+
 const API_KEY = Deno.env.get("API_KEY");
 if (!API_KEY) {
   console.error("API_KEY environment variable is required");
@@ -83,8 +85,8 @@ function isSvgConfig(value: unknown): value is SvgConfig {
   const textAlign = config.textAlign;
   return isNumber(config.width) &&
     isNumber(config.height) &&
-    isString(config.cardBackground) &&
-    isString(config.cardBorder) &&
+    (config.cardBackground === undefined || isString(config.cardBackground)) &&
+    (config.cardBorder === undefined || isString(config.cardBorder)) &&
     isString(config.textPrimary) &&
     isString(config.textSecondary) &&
     isString(config.textMuted) &&
@@ -294,6 +296,190 @@ async function handleGetNowPlaying(kv: Deno.Kv): Promise<Response> {
   });
 }
 
+const MAX_PREVIEW_BODY = 8 * 1024 * 1024; // 8 MB
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function sanitizePreviewConfig(
+  raw: Record<string, unknown>,
+): Partial<SvgConfig> {
+  const config: Partial<SvgConfig> = {};
+
+  if (typeof raw.width === "number" && Number.isFinite(raw.width)) {
+    config.width = clamp(Math.round(raw.width), 200, 1600);
+  }
+  if (typeof raw.height === "number" && Number.isFinite(raw.height)) {
+    config.height = clamp(Math.round(raw.height), 80, 600);
+  }
+  if (typeof raw.albumSize === "number" && Number.isFinite(raw.albumSize)) {
+    config.albumSize = clamp(Math.round(raw.albumSize), 40, 400);
+  }
+  if (
+    typeof raw.borderRadius === "number" && Number.isFinite(raw.borderRadius)
+  ) {
+    config.borderRadius = clamp(Math.round(raw.borderRadius), 0, 64);
+  }
+
+  if (
+    typeof raw.cardBackground === "string" &&
+    HEX_COLOR_PATTERN.test(raw.cardBackground)
+  ) {
+    config.cardBackground = raw.cardBackground;
+  }
+  if (
+    typeof raw.cardBorder === "string" &&
+    HEX_COLOR_PATTERN.test(raw.cardBorder)
+  ) {
+    config.cardBorder = raw.cardBorder;
+  }
+  for (
+    const key of ["textPrimary", "textSecondary", "textMuted"] as const
+  ) {
+    const val = raw[key];
+    if (typeof val === "string" && HEX_COLOR_PATTERN.test(val)) {
+      config[key] = val;
+    }
+  }
+
+  if (raw.albumPosition === "left" || raw.albumPosition === "right") {
+    config.albumPosition = raw.albumPosition;
+  }
+  if (
+    raw.textAlign === "left" || raw.textAlign === "center" ||
+    raw.textAlign === "right"
+  ) {
+    config.textAlign = raw.textAlign;
+  }
+
+  for (
+    const key of ["showStatus", "showTitle", "showArtist", "showAlbum"] as const
+  ) {
+    if (typeof raw[key] === "boolean") {
+      config[key] = raw[key] as boolean;
+    }
+  }
+
+  if (
+    typeof raw.visualisation === "string" &&
+    VISUALISATION_TYPES.includes(raw.visualisation as VisualisationType)
+  ) {
+    config.visualisation = raw.visualisation as VisualisationType;
+  }
+
+  if (
+    typeof raw.fontTitleFile === "string" &&
+    FONT_FILE_PATTERN.test(raw.fontTitleFile)
+  ) {
+    config.fontTitleFile = raw.fontTitleFile;
+    config.fontTitleFamily = typeof raw.fontTitleFamily === "string" &&
+        FONT_FAMILY_PATTERN.test(raw.fontTitleFamily)
+      ? raw.fontTitleFamily
+      : inferFontFamily(raw.fontTitleFile);
+  }
+  if (
+    typeof raw.fontBodyFile === "string" &&
+    FONT_FILE_PATTERN.test(raw.fontBodyFile)
+  ) {
+    config.fontBodyFile = raw.fontBodyFile;
+    config.fontBodyFamily = typeof raw.fontBodyFamily === "string" &&
+        FONT_FAMILY_PATTERN.test(raw.fontBodyFamily)
+      ? raw.fontBodyFamily
+      : inferFontFamily(raw.fontBodyFile);
+  }
+  if (
+    typeof raw.fontFallback === "string" &&
+    raw.fontFallback.length > 0 && raw.fontFallback.length <= 100
+  ) {
+    config.fontFallback = raw.fontFallback;
+  }
+
+  return config;
+}
+
+async function handlePreviewRender(req: Request): Promise<Response> {
+  const contentLength = parseInt(
+    req.headers.get("Content-Length") || "0",
+  );
+  if (contentLength > MAX_PREVIEW_BODY) {
+    return new Response(
+      JSON.stringify({ error: "Request body too large" }),
+      { status: 413, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  try {
+    const text = await req.text();
+    if (text.length > MAX_PREVIEW_BODY) {
+      return new Response(
+        JSON.stringify({ error: "Request body too large" }),
+        { status: 413, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    const body = JSON.parse(text);
+    const data = body.data as NowPlayingData | null;
+    const configOverrides = sanitizePreviewConfig(body.config || {});
+    const baseConfig: SvgConfig = {
+      ...defaultSvgConfig,
+      ...configOverrides,
+    };
+    const titleFont = await loadFontData(baseConfig.fontTitleFile);
+    const bodyFont = await loadFontData(baseConfig.fontBodyFile);
+    const config: SvgConfig = {
+      ...baseConfig,
+      fontTitleDataUrl: titleFont?.dataUrl,
+      fontBodyDataUrl: bodyFont?.dataUrl,
+      fontTitleFormat: titleFont?.format,
+      fontBodyFormat: bodyFont?.format,
+    };
+    const svg = generateNowPlayingSvg(data, config);
+    return new Response(svg, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/svg+xml",
+        "Cache-Control": "no-cache",
+      },
+    });
+  } catch (_error) {
+    return new Response(JSON.stringify({ error: "Invalid request body" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+async function handleGetEditor(): Promise<Response> {
+  try {
+    if (!editorCache.html) {
+      const editorUrl = new URL("./editor.html", import.meta.url);
+      let html = await Deno.readTextFile(editorUrl);
+      const artUrl = new URL("./assets/sample-art.jpg", import.meta.url);
+      const artData = await Deno.readFile(artUrl);
+      const artBase64 = encodeBase64(artData);
+      html = html.replace("{{SAMPLE_ART_BASE64}}", artBase64);
+      editorCache.html = html;
+    }
+    return new Response(editorCache.html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
+  } catch (_error) {
+    return new Response(
+      JSON.stringify({ error: "Editor page not found" }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+}
+
 function handleGetPreview(req: Request): Response {
   const params = new URL(req.url).searchParams;
 
@@ -394,6 +580,10 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
 
     if (path === "/now-playing.svg" && req.method === "GET") {
       response = await handleGetSvg(req, kv);
+    } else if (path === "/editor" && req.method === "GET") {
+      response = await handleGetEditor();
+    } else if (path === "/api/preview" && req.method === "POST") {
+      response = await handlePreviewRender(req);
     } else if (path === "/preview" && req.method === "GET") {
       response = handleGetPreview(req);
     } else if (path === "/api/now-playing" && req.method === "POST") {
@@ -406,6 +596,8 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
           endpoints: {
             widget: "/now-playing.svg",
             preview: "/preview",
+            editor: "/editor",
+            render: "POST /api/preview",
             update: "POST /api/now-playing",
             debug: "/api/now-playing",
           },

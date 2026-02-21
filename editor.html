@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Now Playing SVG Editor</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #09090b;
+        color: #e4e4e7;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        grid-template-rows: auto 1fr;
+        height: 100vh;
+      }
+
+      .header {
+        grid-column: 1 / -1;
+        padding: 12px 20px;
+        background: #0f0f12;
+        border-bottom: 1px solid #27272a;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .header h1 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fafafa;
+        letter-spacing: -0.01em;
+      }
+
+      .header .sep {
+        color: #3f3f46;
+      }
+
+      .header .subtitle {
+        font-size: 13px;
+        color: #71717a;
+      }
+
+      .sidebar {
+        background: #0f0f12;
+        border-right: 1px solid #27272a;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .controls {
+        border-bottom: 1px solid #27272a;
+      }
+
+      .controls summary {
+        padding: 10px 16px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #a1a1aa;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        user-select: none;
+      }
+
+      .controls summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .controls summary::before {
+        content: "";
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 4px 0 4px 6px;
+        border-color: transparent transparent transparent #52525b;
+        transition: transform 0.15s;
+        flex-shrink: 0;
+      }
+
+      .controls[open] summary::before {
+        transform: rotate(90deg);
+      }
+
+      .controls summary:hover {
+        color: #e4e4e7;
+      }
+
+      .controls-body {
+        padding: 0 16px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .control-group > label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #a1a1aa;
+      }
+
+      .control-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      select {
+        appearance: none;
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 6px;
+        padding: 6px 28px 6px 10px;
+        font-size: 13px;
+        color: #e4e4e7;
+        cursor: pointer;
+        flex: 1;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2371717a' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: #3f3f46;
+      }
+
+      .checkbox-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #d4d4d8;
+        cursor: pointer;
+        padding: 4px 0;
+      }
+
+      .checkbox-label input[type="checkbox"] {
+        accent-color: #a78bfa;
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+      }
+
+      .color-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .color-row.inactive .color-swatch {
+        opacity: 0.35;
+      }
+
+      .color-swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 1px solid #3f3f46;
+        padding: 0;
+        cursor: pointer;
+        background: none;
+        flex-shrink: 0;
+      }
+
+      .color-swatch::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      .color-swatch::-webkit-color-swatch {
+        border: none;
+        border-radius: 4px;
+      }
+
+      .color-swatch::-moz-color-swatch {
+        border: none;
+        border-radius: 4px;
+      }
+
+      .color-label {
+        font-size: 13px;
+        color: #d4d4d8;
+        flex: 1;
+      }
+
+      .color-value {
+        font-family: "SF Mono", "Cascadia Code", ui-monospace, monospace;
+        font-size: 12px;
+        color: #71717a;
+        min-width: 60px;
+      }
+
+      .color-clear {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+        border: 1px solid #27272a;
+        background: none;
+        color: #52525b;
+        font-size: 13px;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.15s, color 0.15s;
+        flex-shrink: 0;
+      }
+
+      .color-clear:hover {
+        border-color: #f87171;
+        color: #f87171;
+      }
+
+      .color-clear.hidden {
+        visibility: hidden;
+      }
+
+      .color-hint {
+        font-size: 11px;
+        color: #52525b;
+        line-height: 1.4;
+      }
+
+      .upload-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: #18181b;
+        border: 1px dashed #3f3f46;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 13px;
+        color: #a1a1aa;
+        cursor: pointer;
+        transition: border-color 0.15s, color 0.15s;
+      }
+
+      .upload-btn:hover {
+        border-color: #a78bfa;
+        color: #e4e4e7;
+      }
+
+      .upload-btn svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .json-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .tab-bar {
+        display: flex;
+        border-bottom: 1px solid #27272a;
+      }
+
+      .tab-btn {
+        flex: 1;
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #52525b;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: color 0.15s, border-color 0.15s;
+      }
+
+      .tab-btn:hover {
+        color: #a1a1aa;
+      }
+
+      .tab-btn.active {
+        color: #e4e4e7;
+        border-bottom-color: #a78bfa;
+      }
+
+      .json-header {
+        padding: 6px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        border-bottom: 1px solid #27272a;
+        min-height: 30px;
+      }
+
+      .json-error {
+        font-size: 12px;
+        color: #f87171;
+        max-width: 280px;
+        text-align: right;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .json-editor {
+        flex: 1;
+        resize: none;
+        background: #09090b;
+        border: none;
+        padding: 12px 16px;
+        font-family:
+          "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono",
+          ui-monospace, monospace;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: #d4d4d8;
+        tab-size: 2;
+        overflow: auto;
+        display: block;
+      }
+
+      .json-editor:focus {
+        outline: none;
+      }
+
+      .json-editor.hidden {
+        display: none;
+      }
+
+      .preview-pane {
+        background: #09090b;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+        overflow: auto;
+      }
+
+      .preview-container {
+        width: 100%;
+        max-width: 840px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .svg-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .svg-wrapper svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .footer-bar {
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid #27272a;
+        background: #0f0f12;
+        gap: 8px;
+      }
+
+      .footer-left {
+        display: flex;
+        gap: 6px;
+      }
+
+      .footer-btn {
+        background: none;
+        border: 1px solid #27272a;
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 12px;
+        color: #a1a1aa;
+        cursor: pointer;
+        transition: border-color 0.15s, color 0.15s;
+      }
+
+      .footer-btn:hover {
+        border-color: #a78bfa;
+        color: #e4e4e7;
+      }
+
+      .footer-btn.danger:hover {
+        border-color: #f87171;
+        color: #f87171;
+      }
+
+      .status-indicator {
+        font-size: 12px;
+        color: #52525b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #52525b;
+        transition: background 0.2s;
+      }
+
+      .status-dot.ok {
+        background: #4ade80;
+      }
+
+      .status-dot.loading {
+        background: #facc15;
+      }
+
+      .status-dot.error {
+        background: #f87171;
+      }
+
+      .hidden-input {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="header">
+        <h1>Now Playing</h1>
+        <span class="sep">/</span>
+        <span class="subtitle">SVG Editor</span>
+      </div>
+
+      <div class="sidebar">
+        <details class="controls" open>
+          <summary>Controls</summary>
+          <div class="controls-body">
+            <div class="control-group">
+              <label>Playback State</label>
+              <select id="statusSelect">
+                <option value="playing">Playing</option>
+                <option value="paused">Paused</option>
+                <option value="last-played">Last Played (stale)</option>
+                <option value="empty">Nothing Playing</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label>Visualisation</label>
+              <select id="visSelect">
+                <option value="waveform">Waveform</option>
+                <option value="equalizer">Equalizer</option>
+                <option value="orbs">Orbs</option>
+                <option value="particles">Particles</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label>Visibility</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="showStatus" checked />
+                  Status
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="showTitle" checked />
+                  Title
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="showArtist" checked />
+                  Artist
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="showAlbum" checked />
+                  Album
+                </label>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label>Layout</label>
+              <div class="control-row">
+                <select id="albumPosition">
+                  <option value="left">Album Left</option>
+                  <option value="right">Album Right</option>
+                </select>
+                <select id="textAlign">
+                  <option value="left">Align Left</option>
+                  <option value="center">Align Center</option>
+                  <option value="right">Align Right</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label>Card Colors</label>
+              <span class="color-hint"
+              >Optional. Overrides dynamic album art colors.</span>
+              <div class="color-row inactive" id="cardBgRow">
+                <input
+                  type="color"
+                  id="cardBgColor"
+                  class="color-swatch"
+                  value="#18181b"
+                />
+                <span class="color-label">Background</span>
+                <span class="color-value" id="cardBgValue">auto</span>
+                <button class="color-clear hidden" id="cardBgClear">x</button>
+              </div>
+              <div class="color-row inactive" id="cardBorderRow">
+                <input
+                  type="color"
+                  id="cardBorderColor"
+                  class="color-swatch"
+                  value="#27272a"
+                />
+                <span class="color-label">Border</span>
+                <span class="color-value" id="cardBorderValue">auto</span>
+                <button class="color-clear hidden" id="cardBorderClear">
+                  x
+                </button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label>Album Art</label>
+              <button class="upload-btn" id="uploadBtn">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                Upload Image
+              </button>
+              <span class="color-hint">Max 5 MB</span>
+              <input
+                type="file"
+                id="artFileInput"
+                class="hidden-input"
+                accept="image/*"
+              />
+            </div>
+          </div>
+        </details>
+
+        <div class="json-section">
+          <div class="tab-bar">
+            <button class="tab-btn active" id="tabTheme">Theme</button>
+            <button class="tab-btn" id="tabData">Data</button>
+          </div>
+          <div class="json-header">
+            <span class="json-error" id="jsonError"></span>
+          </div>
+          <textarea
+            class="json-editor"
+            id="themeEditor"
+            spellcheck="false"
+          ></textarea>
+          <textarea
+            class="json-editor hidden"
+            id="dataEditor"
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <div class="footer-bar">
+          <div class="footer-left">
+            <button class="footer-btn danger" id="resetBtn">Reset</button>
+            <button class="footer-btn" id="exportBtn">Export Theme</button>
+          </div>
+          <div class="status-indicator">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Ready</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-pane">
+        <div class="preview-container">
+          <div class="svg-wrapper" id="svgPreview"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const SAMPLE_ART = "{{SAMPLE_ART_BASE64}}";
+
+      const DEFAULT_THEME = {
+        width: 800,
+        height: 200,
+        textPrimary: "#fafafa",
+        textSecondary: "#cbd5e1",
+        textMuted: "#94a3b8",
+        albumSize: 150,
+        borderRadius: 16,
+        albumPosition: "left",
+        textAlign: "left",
+        showStatus: true,
+        showTitle: true,
+        showArtist: true,
+        showAlbum: true,
+        fontTitleFamily: "DotGothic16",
+        fontBodyFamily: "Space Mono",
+        fontTitleFile: "DotGothic16-Regular.ttf",
+        fontBodyFile: "SpaceMono-Regular.ttf",
+        fontFallback: "'Segoe UI', sans-serif",
+        visualisation: "waveform",
+      };
+
+      const DEFAULT_DATA = {
+        title: "Resonance",
+        artist: "HOME",
+        album: "Odyssey",
+        albumArtist: "HOME",
+        trackNumber: "5",
+        duration: 213,
+        progress: 87,
+        status: "playing",
+        artBase64: null,
+        colors: {
+          dominant: "#2a1f3d",
+          accent: "#332550",
+          highlight: "#e67ab2",
+        },
+        updatedAt: 0,
+      };
+
+      const cardBgRow = document.getElementById("cardBgRow");
+      const cardBgColor = document.getElementById("cardBgColor");
+      const cardBgValue = document.getElementById("cardBgValue");
+      const cardBgClear = document.getElementById("cardBgClear");
+      const cardBorderRow = document.getElementById("cardBorderRow");
+      const cardBorderColor = document.getElementById(
+        "cardBorderColor",
+      );
+      const cardBorderValue = document.getElementById(
+        "cardBorderValue",
+      );
+      const cardBorderClear = document.getElementById(
+        "cardBorderClear",
+      );
+      const themeEditor = document.getElementById("themeEditor");
+      const dataEditor = document.getElementById("dataEditor");
+      const svgPreview = document.getElementById("svgPreview");
+      const jsonError = document.getElementById("jsonError");
+      const statusDot = document.getElementById("statusDot");
+      const statusText = document.getElementById("statusText");
+      const statusSelect = document.getElementById("statusSelect");
+      const visSelect = document.getElementById("visSelect");
+      const showStatus = document.getElementById("showStatus");
+      const showTitle = document.getElementById("showTitle");
+      const showArtist = document.getElementById("showArtist");
+      const showAlbum = document.getElementById("showAlbum");
+      const albumPosition = document.getElementById("albumPosition");
+      const textAlignEl = document.getElementById("textAlign");
+      const uploadBtn = document.getElementById("uploadBtn");
+      const artFileInput = document.getElementById("artFileInput");
+      const resetBtn = document.getElementById("resetBtn");
+      const exportBtn = document.getElementById("exportBtn");
+      const tabTheme = document.getElementById("tabTheme");
+      const tabData = document.getElementById("tabData");
+
+      let debounceTimer = null;
+      let syncing = false;
+      let activeTab = "theme";
+
+      // --- SVG sanitization ---
+
+      const DANGEROUS_ELEMENTS = new Set([
+        "script",
+        "foreignobject",
+        "iframe",
+        "object",
+        "embed",
+        "math",
+        "annotation-xml",
+      ]);
+
+      const URI_ATTRS = new Set([
+        "href",
+        "xlink:href",
+        "src",
+        "action",
+        "formaction",
+      ]);
+
+      // Normalize URI value: collapse whitespace and control chars
+      // that browsers ignore but attackers use to bypass filters
+      function normalizeUri(val) {
+        return val.replace(/[\s\x00-\x1f]+/g, "").toLowerCase();
+      }
+
+      function hasDangerousUri(val) {
+        const norm = normalizeUri(val);
+        if (/^(javascript|vbscript):/.test(norm)) return true;
+        // Allow data:image/* only — block data:text/html etc.
+        if (norm.startsWith("data:") && !/^data:image\//.test(norm)) {
+          return true;
+        }
+        return false;
+      }
+
+      function hasDangerousStyle(val) {
+        const norm = val.replace(/\s+/g, "").toLowerCase();
+        // expression() (IE), url(javascript:...), -moz-binding
+        if (/expression\s*\(/.test(norm)) return true;
+        if (/url\s*\(\s*(["']?)\s*javascript:/i.test(norm)) return true;
+        if (/-moz-binding/.test(norm)) return true;
+        return false;
+      }
+
+      function sanitizeElement(el) {
+        // Remove dangerous child elements
+        for (const child of [...el.children]) {
+          if (DANGEROUS_ELEMENTS.has(child.tagName.toLowerCase())) {
+            child.remove();
+            continue;
+          }
+          // Sanitize attributes on this child
+          for (const attr of [...child.attributes]) {
+            const name = attr.name.toLowerCase();
+            if (name.startsWith("on")) {
+              child.removeAttribute(attr.name);
+            } else if (
+              URI_ATTRS.has(name) && hasDangerousUri(attr.value)
+            ) {
+              child.removeAttribute(attr.name);
+            } else if (
+              name === "style" && hasDangerousStyle(attr.value)
+            ) {
+              child.removeAttribute(attr.name);
+            }
+          }
+          sanitizeElement(child);
+        }
+      }
+
+      function sanitizeSvg(raw) {
+        const doc = new DOMParser().parseFromString(
+          raw,
+          "image/svg+xml",
+        );
+        const errorNode = doc.querySelector("parsererror");
+        if (errorNode) return null;
+
+        const svg = doc.documentElement;
+        if (svg.tagName !== "svg") return null;
+
+        // Sanitize root <svg> attributes
+        for (const attr of [...svg.attributes]) {
+          const name = attr.name.toLowerCase();
+          if (name.startsWith("on")) {
+            svg.removeAttribute(attr.name);
+          } else if (
+            URI_ATTRS.has(name) && hasDangerousUri(attr.value)
+          ) {
+            svg.removeAttribute(attr.name);
+          }
+        }
+
+        sanitizeElement(svg);
+
+        return document.importNode(svg, true);
+      }
+
+      // --- Tab switching ---
+
+      function switchTab(tab) {
+        activeTab = tab;
+        tabTheme.classList.toggle("active", tab === "theme");
+        tabData.classList.toggle("active", tab === "data");
+        themeEditor.classList.toggle("hidden", tab !== "theme");
+        dataEditor.classList.toggle("hidden", tab !== "data");
+      }
+
+      tabTheme.addEventListener("click", () => switchTab("theme"));
+      tabData.addEventListener("click", () => switchTab("data"));
+
+      // --- JSON helpers ---
+
+      function parseEditor(textarea) {
+        try {
+          const parsed = JSON.parse(textarea.value);
+          jsonError.textContent = "";
+          return parsed;
+        } catch (e) {
+          jsonError.textContent = e.message;
+          return null;
+        }
+      }
+
+      function setEditorValue(textarea, obj) {
+        textarea.value = JSON.stringify(obj, null, 2);
+      }
+
+      // --- Theme <-> Controls sync ---
+
+      function getThemeFromEditor() {
+        return parseEditor(themeEditor);
+      }
+
+      function getDataFromEditor() {
+        return parseEditor(dataEditor);
+      }
+
+      // --- Color picker helpers ---
+
+      function setColorActive(row, input, valueEl, clearBtn, hex) {
+        row.classList.remove("inactive");
+        input.value = hex;
+        valueEl.textContent = hex;
+        clearBtn.classList.remove("hidden");
+      }
+
+      function setColorInactive(row, input, valueEl, clearBtn) {
+        row.classList.add("inactive");
+        valueEl.textContent = "auto";
+        clearBtn.classList.add("hidden");
+      }
+
+      function syncControlsFromTheme(theme) {
+        if (!theme) return;
+        syncing = true;
+        if (theme.visualisation) visSelect.value = theme.visualisation;
+        if (typeof theme.showStatus === "boolean") {
+          showStatus.checked = theme.showStatus;
+        }
+        if (typeof theme.showTitle === "boolean") {
+          showTitle.checked = theme.showTitle;
+        }
+        if (typeof theme.showArtist === "boolean") {
+          showArtist.checked = theme.showArtist;
+        }
+        if (typeof theme.showAlbum === "boolean") {
+          showAlbum.checked = theme.showAlbum;
+        }
+        if (theme.albumPosition) {
+          albumPosition.value = theme.albumPosition;
+        }
+        if (theme.textAlign) textAlignEl.value = theme.textAlign;
+
+        // Sync card color pickers
+        if (theme.cardBackground) {
+          setColorActive(
+            cardBgRow,
+            cardBgColor,
+            cardBgValue,
+            cardBgClear,
+            theme.cardBackground,
+          );
+        } else {
+          setColorInactive(
+            cardBgRow,
+            cardBgColor,
+            cardBgValue,
+            cardBgClear,
+          );
+        }
+        if (theme.cardBorder) {
+          setColorActive(
+            cardBorderRow,
+            cardBorderColor,
+            cardBorderValue,
+            cardBorderClear,
+            theme.cardBorder,
+          );
+        } else {
+          setColorInactive(
+            cardBorderRow,
+            cardBorderColor,
+            cardBorderValue,
+            cardBorderClear,
+          );
+        }
+
+        syncing = false;
+      }
+
+      function applyControlsToTheme() {
+        const theme = getThemeFromEditor();
+        if (!theme) return null;
+        theme.showStatus = showStatus.checked;
+        theme.showTitle = showTitle.checked;
+        theme.showArtist = showArtist.checked;
+        theme.showAlbum = showAlbum.checked;
+        theme.albumPosition = albumPosition.value;
+        theme.textAlign = textAlignEl.value;
+        theme.visualisation = visSelect.value;
+
+        if (!cardBgRow.classList.contains("inactive")) {
+          theme.cardBackground = cardBgColor.value;
+        } else {
+          delete theme.cardBackground;
+        }
+        if (!cardBorderRow.classList.contains("inactive")) {
+          theme.cardBorder = cardBorderColor.value;
+        } else {
+          delete theme.cardBorder;
+        }
+
+        setEditorValue(themeEditor, theme);
+        return theme;
+      }
+
+      // --- Status mode ---
+
+      function applyStatusMode(data) {
+        const mode = statusSelect.value;
+        if (mode === "playing") {
+          data.status = "playing";
+          data.updatedAt = Date.now();
+        } else if (mode === "paused") {
+          data.status = "paused";
+          data.updatedAt = Date.now();
+        } else if (mode === "last-played") {
+          data.status = "playing";
+          data.updatedAt = Date.now() - 10 * 60 * 1000;
+        }
+        return data;
+      }
+
+      // --- Render ---
+
+      function setStatus(state, text) {
+        statusDot.className = "status-dot " + state;
+        statusText.textContent = text;
+      }
+
+      async function renderPreview() {
+        const theme = getThemeFromEditor();
+        const data = getDataFromEditor();
+        if (!theme || !data) {
+          setStatus("error", "Invalid JSON");
+          return;
+        }
+
+        const mode = statusSelect.value;
+        const sendData = mode === "empty"
+          ? null
+          : applyStatusMode({ ...data });
+
+        setStatus("loading", "Rendering...");
+
+        try {
+          const res = await fetch("/api/preview", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: sendData, config: theme }),
+          });
+
+          if (!res.ok) {
+            const err = await res.json();
+            setStatus("error", err.error || "Render failed");
+            return;
+          }
+
+          const svg = await res.text();
+          const sanitized = sanitizeSvg(svg);
+          if (!sanitized) {
+            setStatus("error", "Invalid SVG response");
+            return;
+          }
+          svgPreview.replaceChildren(sanitized);
+          setStatus("ok", "Rendered");
+        } catch (_e) {
+          setStatus("error", "Network error");
+        }
+      }
+
+      function scheduleRender() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(renderPreview, 300);
+      }
+
+      // --- Event listeners ---
+
+      themeEditor.addEventListener("input", () => {
+        const theme = getThemeFromEditor();
+        if (theme) syncControlsFromTheme(theme);
+        scheduleRender();
+      });
+
+      dataEditor.addEventListener("input", scheduleRender);
+
+      function onControlChange() {
+        if (syncing) return;
+        applyControlsToTheme();
+        scheduleRender();
+      }
+
+      [
+        visSelect,
+        showStatus,
+        showTitle,
+        showArtist,
+        showAlbum,
+        albumPosition,
+        textAlignEl,
+      ].forEach((el) => el.addEventListener("change", onControlChange));
+
+      statusSelect.addEventListener("change", () => {
+        if (!syncing) scheduleRender();
+      });
+
+      // --- Card color pickers ---
+
+      cardBgColor.addEventListener("input", () => {
+        setColorActive(
+          cardBgRow,
+          cardBgColor,
+          cardBgValue,
+          cardBgClear,
+          cardBgColor.value,
+        );
+        if (!syncing) {
+          applyControlsToTheme();
+          scheduleRender();
+        }
+      });
+
+      cardBorderColor.addEventListener("input", () => {
+        setColorActive(
+          cardBorderRow,
+          cardBorderColor,
+          cardBorderValue,
+          cardBorderClear,
+          cardBorderColor.value,
+        );
+        if (!syncing) {
+          applyControlsToTheme();
+          scheduleRender();
+        }
+      });
+
+      cardBgClear.addEventListener("click", () => {
+        setColorInactive(
+          cardBgRow,
+          cardBgColor,
+          cardBgValue,
+          cardBgClear,
+        );
+        applyControlsToTheme();
+        scheduleRender();
+      });
+
+      cardBorderClear.addEventListener("click", () => {
+        setColorInactive(
+          cardBorderRow,
+          cardBorderColor,
+          cardBorderValue,
+          cardBorderClear,
+        );
+        applyControlsToTheme();
+        scheduleRender();
+      });
+
+      // --- Upload art ---
+
+      uploadBtn.addEventListener("click", () => artFileInput.click());
+
+      const MAX_ART_SIZE = 5 * 1024 * 1024; // 5 MB
+
+      artFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > MAX_ART_SIZE) {
+          setStatus("error", "Image exceeds 5 MB limit");
+          artFileInput.value = "";
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result.split(",")[1];
+          const data = getDataFromEditor();
+          if (data) {
+            data.artBase64 = base64;
+            setEditorValue(dataEditor, data);
+            scheduleRender();
+          }
+        };
+        reader.readAsDataURL(file);
+        artFileInput.value = "";
+      });
+
+      // --- Export theme ---
+
+      exportBtn.addEventListener("click", () => {
+        const theme = getThemeFromEditor();
+        if (!theme) return;
+        const json = JSON.stringify(theme, null, 2) + "\n";
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "theme.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      // --- Reset ---
+
+      resetBtn.addEventListener("click", () => {
+        syncing = true;
+        statusSelect.value = "playing";
+        visSelect.value = "waveform";
+        showStatus.checked = true;
+        showTitle.checked = true;
+        showArtist.checked = true;
+        showAlbum.checked = true;
+        albumPosition.value = "left";
+        textAlignEl.value = "left";
+        setColorInactive(
+          cardBgRow,
+          cardBgColor,
+          cardBgValue,
+          cardBgClear,
+        );
+        setColorInactive(
+          cardBorderRow,
+          cardBorderColor,
+          cardBorderValue,
+          cardBorderClear,
+        );
+        syncing = false;
+        setEditorValue(themeEditor, { ...DEFAULT_THEME });
+        const artValue = SAMPLE_ART.startsWith("{{")
+          ? null
+          : SAMPLE_ART;
+        setEditorValue(dataEditor, {
+          ...DEFAULT_DATA,
+          artBase64: artValue,
+          updatedAt: Date.now(),
+        });
+        scheduleRender();
+      });
+
+      // --- Init ---
+
+      function init() {
+        const artValue = SAMPLE_ART.startsWith("{{")
+          ? null
+          : SAMPLE_ART;
+        setEditorValue(themeEditor, { ...DEFAULT_THEME });
+        setEditorValue(dataEditor, {
+          ...DEFAULT_DATA,
+          artBase64: artValue,
+          updatedAt: Date.now(),
+        });
+        renderPreview();
+      }
+
+      init();
+    </script>
+  </body>
+</html>

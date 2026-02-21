@@ -68,8 +68,8 @@ export const VISUALISATION_TYPES: readonly VisualisationType[] = [
 export interface SvgConfig {
   width: number;
   height: number;
-  cardBackground: string;
-  cardBorder: string;
+  cardBackground?: string;
+  cardBorder?: string;
   textPrimary: string;
   textSecondary: string;
   textMuted: string;
@@ -96,8 +96,6 @@ export interface SvgConfig {
 export const defaultSvgConfig: SvgConfig = {
   width: 800,
   height: 200,
-  cardBackground: "#18181b",
-  cardBorder: "#27272a",
   textPrimary: "#fafafa",
   textSecondary: "#cbd5e1",
   textMuted: "#94a3b8",
