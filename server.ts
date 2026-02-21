@@ -8,6 +8,8 @@ import {
 import { encodeBase64 } from "@std/encoding";
 import { generateNowPlayingSvg } from "./svg.ts";
 
+const editorCache: { html: string | null } = { html: null };
+
 const API_KEY = Deno.env.get("API_KEY");
 if (!API_KEY) {
   console.error("API_KEY environment variable is required");
@@ -83,8 +85,8 @@ function isSvgConfig(value: unknown): value is SvgConfig {
   const textAlign = config.textAlign;
   return isNumber(config.width) &&
     isNumber(config.height) &&
-    isString(config.cardBackground) &&
-    isString(config.cardBorder) &&
+    (config.cardBackground === undefined || isString(config.cardBackground)) &&
+    (config.cardBorder === undefined || isString(config.cardBorder)) &&
     isString(config.textPrimary) &&
     isString(config.textSecondary) &&
     isString(config.textMuted) &&
@@ -294,6 +296,69 @@ async function handleGetNowPlaying(kv: Deno.Kv): Promise<Response> {
   });
 }
 
+async function handlePreviewRender(req: Request): Promise<Response> {
+  try {
+    const body = await req.json();
+    const data = body.data as NowPlayingData | null;
+    const configOverrides = body.config || {};
+    const baseConfig: SvgConfig = {
+      ...defaultSvgConfig,
+      ...configOverrides,
+    };
+    const titleFont = await loadFontData(baseConfig.fontTitleFile);
+    const bodyFont = await loadFontData(baseConfig.fontBodyFile);
+    const config: SvgConfig = {
+      ...baseConfig,
+      fontTitleDataUrl: titleFont?.dataUrl,
+      fontBodyDataUrl: bodyFont?.dataUrl,
+      fontTitleFormat: titleFont?.format,
+      fontBodyFormat: bodyFont?.format,
+    };
+    const svg = generateNowPlayingSvg(data, config);
+    return new Response(svg, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/svg+xml",
+        "Cache-Control": "no-cache",
+      },
+    });
+  } catch (_error) {
+    return new Response(JSON.stringify({ error: "Invalid request body" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+async function handleGetEditor(): Promise<Response> {
+  try {
+    if (!editorCache.html) {
+      const editorUrl = new URL("./editor.html", import.meta.url);
+      let html = await Deno.readTextFile(editorUrl);
+      const artUrl = new URL("./assets/sample-art.jpg", import.meta.url);
+      const artData = await Deno.readFile(artUrl);
+      const artBase64 = encodeBase64(artData);
+      html = html.replace("{{SAMPLE_ART_BASE64}}", artBase64);
+      editorCache.html = html;
+    }
+    return new Response(editorCache.html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
+  } catch (_error) {
+    return new Response(
+      JSON.stringify({ error: "Editor page not found" }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+}
+
 function handleGetPreview(req: Request): Response {
   const params = new URL(req.url).searchParams;
 
@@ -394,6 +459,10 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
 
     if (path === "/now-playing.svg" && req.method === "GET") {
       response = await handleGetSvg(req, kv);
+    } else if (path === "/editor" && req.method === "GET") {
+      response = await handleGetEditor();
+    } else if (path === "/api/preview" && req.method === "POST") {
+      response = await handlePreviewRender(req);
     } else if (path === "/preview" && req.method === "GET") {
       response = handleGetPreview(req);
     } else if (path === "/api/now-playing" && req.method === "POST") {
@@ -406,6 +475,8 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
           endpoints: {
             widget: "/now-playing.svg",
             preview: "/preview",
+            editor: "/editor",
+            render: "POST /api/preview",
             update: "POST /api/now-playing",
             debug: "/api/now-playing",
           },

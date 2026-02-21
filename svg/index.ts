@@ -22,12 +22,19 @@ export function generateNowPlayingSvg(
   const hasTrack = data && (isPlaying || isPaused || isStale);
 
   // Use extracted colors or fall back to defaults
-  const dominantColor = data?.colors?.dominant || config.cardBorder;
+  const dominantColor = data?.colors?.dominant || "#27272a";
   const accentColor = data?.colors?.accent || "#22c55e";
-  const baseDark = mixColors(dominantColor, "#050505", 0.82);
-  const midDark = mixColors(dominantColor, "#0d0f12", 0.7);
   const highlight = data?.colors?.highlight ||
     mixColors(accentColor, "#ffffff", 0.45);
+
+  // If the theme specifies card colors, use them directly.
+  // Otherwise derive from the album art's dominant color.
+  const baseDark = config.cardBackground ||
+    mixColors(dominantColor, "#050505", 0.82);
+  const midDark = config.cardBackground
+    ? mixColors(config.cardBackground, "#0d0f12", 0.3)
+    : mixColors(dominantColor, "#0d0f12", 0.7);
+  const borderColor = config.cardBorder || midDark;
 
   const width = config.width;
   const height = config.height;
@@ -170,7 +177,7 @@ export function generateNowPlayingSvg(
   </defs>
 
   <!-- Card background with clean rounded border -->
-  <rect width="${width}" height="${height}" rx="${config.borderRadius}" fill="${midDark}" />
+  <rect width="${width}" height="${height}" rx="${config.borderRadius}" fill="${borderColor}" />
   <rect x="2" y="2" width="${width - 4}" height="${height - 4}" rx="${
     config.borderRadius - 2
   }" fill="url(#cardGradient)" />

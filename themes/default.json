@@ -1,8 +1,6 @@
 {
   "width": 800,
   "height": 200,
-  "cardBackground": "#18181b",
-  "cardBorder": "#27272a",
   "textPrimary": "#fafafa",
   "textSecondary": "#cbd5e1",
   "textMuted": "#94a3b8",
