@@ -576,6 +576,7 @@
                 </svg>
                 Upload Image
               </button>
+              <span class="color-hint">Max 5 MB</span>
               <input
                 type="file"
                 id="artFileInput"
@@ -997,9 +998,17 @@
 
       uploadBtn.addEventListener("click", () => artFileInput.click());
 
+      const MAX_ART_SIZE = 5 * 1024 * 1024; // 5 MB
+
       artFileInput.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        if (file.size > MAX_ART_SIZE) {
+          setStatus("error", "Image exceeds 5 MB limit");
+          artFileInput.value = "";
+          return;
+        }
 
         const reader = new FileReader();
         reader.onload = () => {
