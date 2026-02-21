@@ -5,16 +5,16 @@ import {
   VISUALISATION_TYPES,
   VisualisationType,
 } from "./types.ts";
-import { encodeBase64, encodeHex } from "@std/encoding";
+import { encodeBase64 } from "@std/encoding";
 import { generateNowPlayingSvg } from "./svg.ts";
 
 const editorCache: { template: string | null } = { template: null };
 
-/** Generate a cryptographic random nonce for CSP headers. */
+/** Generate a cryptographic random base64-encoded nonce for CSP headers. */
 function generateNonce(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
-  return encodeHex(bytes);
+  return encodeBase64(bytes);
 }
 
 const API_KEY = Deno.env.get("API_KEY");
