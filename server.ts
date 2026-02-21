@@ -658,7 +658,7 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
     ) {
       newHeaders.set(
         "Content-Security-Policy",
-        "default-src 'none'; style-src 'unsafe-inline'",
+        "default-src 'none'; style-src 'unsafe-inline'; font-src data:",
       );
     }
 
