@@ -21,20 +21,29 @@ export function generateNowPlayingSvg(
   const isPaused = data && data.status === "paused" && !isStale;
   const hasTrack = data && (isPlaying || isPaused || isStale);
 
-  // Use extracted colors or fall back to defaults
-  const dominantColor = data?.colors?.dominant || "#27272a";
-  const accentColor = data?.colors?.accent || "#22c55e";
-  const highlight = data?.colors?.highlight ||
-    mixColors(accentColor, "#ffffff", 0.45);
+  // Use extracted colors or fall back to defaults.
+  // All color values are escaped for safe SVG attribute interpolation
+  // as defense-in-depth against injection via compromised KV data.
+  const dominantColor = escapeXml(data?.colors?.dominant || "#27272a");
+  const accentColor = escapeXml(data?.colors?.accent || "#22c55e");
+  const highlight = escapeXml(
+    data?.colors?.highlight || mixColors(accentColor, "#ffffff", 0.45),
+  );
 
   // If the theme specifies card colors, use them directly.
   // Otherwise derive from the album art's dominant color.
-  const baseDark = config.cardBackground ||
-    mixColors(dominantColor, "#050505", 0.82);
-  const midDark = config.cardBackground
-    ? mixColors(config.cardBackground, "#0d0f12", 0.3)
-    : mixColors(dominantColor, "#0d0f12", 0.7);
-  const borderColor = config.cardBorder || midDark;
+  const baseDark = escapeXml(
+    config.cardBackground || mixColors(dominantColor, "#050505", 0.82),
+  );
+  const midDark = escapeXml(
+    config.cardBackground
+      ? mixColors(config.cardBackground, "#0d0f12", 0.3)
+      : mixColors(dominantColor, "#0d0f12", 0.7),
+  );
+  const borderColor = escapeXml(config.cardBorder || midDark);
+  const textPrimary = escapeXml(config.textPrimary);
+  const textSecondary = escapeXml(config.textSecondary);
+  const textMuted = escapeXml(config.textMuted);
 
   const width = config.width;
   const height = config.height;
@@ -96,19 +105,19 @@ export function generateNowPlayingSvg(
     10,
     Math.floor(textAreaWidth / (albumFontSize * 0.55)),
   );
-  const fontFallback = config.fontFallback || "sans-serif";
+  const fontFallback = escapeXml(config.fontFallback || "sans-serif");
   const fontTitleFamily = config.fontTitleFamily
-    ? `'${config.fontTitleFamily}', ${fontFallback}`
+    ? `'${escapeXml(config.fontTitleFamily)}', ${fontFallback}`
     : fontFallback;
   const fontBodyFamily = config.fontBodyFamily
-    ? `'${config.fontBodyFamily}', ${fontFallback}`
+    ? `'${escapeXml(config.fontBodyFamily)}', ${fontFallback}`
     : fontFallback;
   const fontFaces = [
     config.fontTitleDataUrl && config.fontTitleFamily
       ? `@font-face {
-  font-family: '${config.fontTitleFamily}';
-  src: url(${config.fontTitleDataUrl}) format('${
-        config.fontTitleFormat || "truetype"
+  font-family: '${escapeXml(config.fontTitleFamily)}';
+  src: url(${escapeXml(config.fontTitleDataUrl)}) format('${
+        escapeXml(config.fontTitleFormat || "truetype")
       }');
   font-weight: 400;
   font-style: normal;
@@ -117,9 +126,9 @@ export function generateNowPlayingSvg(
       : "",
     config.fontBodyDataUrl && config.fontBodyFamily
       ? `@font-face {
-  font-family: '${config.fontBodyFamily}';
-  src: url(${config.fontBodyDataUrl}) format('${
-        config.fontBodyFormat || "truetype"
+  font-family: '${escapeXml(config.fontBodyFamily)}';
+  src: url(${escapeXml(config.fontBodyDataUrl)}) format('${
+        escapeXml(config.fontBodyFormat || "truetype")
       }');
   font-weight: 400;
   font-style: normal;
@@ -212,12 +221,12 @@ export function generateNowPlayingSvg(
               ? `
     <g clip-path="url(#titleClip)">
       <g>
-        <text x="${textAreaLeft}" y="${titleY}" fill="${config.textPrimary}" font-size="${titleFontSize}" font-weight="600" filter="url(#textGlow)" font-family="${fontTitleFamily}">
+        <text x="${textAreaLeft}" y="${titleY}" fill="${textPrimary}" font-size="${titleFontSize}" font-weight="600" filter="url(#textGlow)" font-family="${fontTitleFamily}">
           ${escapeXml(data.title)}
         </text>
         <text x="${
                 textAreaLeft + titleScrollDistance
-              }" y="${titleY}" fill="${config.textPrimary}" font-size="${titleFontSize}" font-weight="600" filter="url(#textGlow)" font-family="${fontTitleFamily}">
+              }" y="${titleY}" fill="${textPrimary}" font-size="${titleFontSize}" font-weight="600" filter="url(#textGlow)" font-family="${fontTitleFamily}">
           ${escapeXml(data.title)}
         </text>
         <animateTransform attributeName="transform" type="translate" from="0 0" to="-${titleScrollDistance} 0" dur="15s" repeatCount="indefinite" />
@@ -225,7 +234,7 @@ export function generateNowPlayingSvg(
     </g>
     `
               : `
-    <text x="${textX}" y="${titleY}" fill="${config.textPrimary}" font-size="${titleFontSize}" font-weight="600" text-overflow="ellipsis" filter="url(#textGlow)" text-anchor="${textAnchor}" font-family="${fontTitleFamily}">
+    <text x="${textX}" y="${titleY}" fill="${textPrimary}" font-size="${titleFontSize}" font-weight="600" text-overflow="ellipsis" filter="url(#textGlow)" text-anchor="${textAnchor}" font-family="${fontTitleFamily}">
       ${escapeXml(truncateText(data.title, titleMaxChars))}
     </text>
     `
@@ -238,7 +247,7 @@ export function generateNowPlayingSvg(
         config.showArtist
           ? `
     <!-- Artist -->
-    <text x="${textX}" y="${artistY}" fill="${config.textSecondary}" font-size="${artistFontSize}" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
+    <text x="${textX}" y="${artistY}" fill="${textSecondary}" font-size="${artistFontSize}" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
       ${escapeXml(truncateText(data.artist, artistMaxChars))}
     </text>
     `
@@ -249,7 +258,7 @@ export function generateNowPlayingSvg(
         config.showAlbum
           ? `
     <!-- Album and status -->
-    <text x="${textX}" y="${albumYPos}" fill="${config.textMuted}" font-size="${albumFontSize}" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
+    <text x="${textX}" y="${albumYPos}" fill="${textMuted}" font-size="${albumFontSize}" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
       ${escapeXml(truncateText(data.album, albumMaxChars))}
     </text>
     `
@@ -260,7 +269,7 @@ export function generateNowPlayingSvg(
     <!-- Not playing message -->
     <text x="${textX}" y="${
         height / 2
-      }" fill="${config.textMuted}" font-size="14" dominant-baseline="middle" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
+      }" fill="${textMuted}" font-size="14" dominant-baseline="middle" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
       Nothing playing right now
     </text>
     `
@@ -271,7 +280,9 @@ export function generateNowPlayingSvg(
     hasTrack && data.artBase64
       ? `
   <!-- Album art with rounded corners -->
-  <image x="${albumX}" y="${albumY}" width="${albumSize}" height="${albumSize}" xlink:href="data:image/jpeg;base64,${data.artBase64}" clip-path="url(#albumClip)" preserveAspectRatio="xMidYMid slice" filter="url(#glow)" />
+  <image x="${albumX}" y="${albumY}" width="${albumSize}" height="${albumSize}" xlink:href="data:image/jpeg;base64,${
+        escapeXml(data.artBase64)
+      }" clip-path="url(#albumClip)" preserveAspectRatio="xMidYMid slice" filter="url(#glow)" />
   <rect x="${albumX}" y="${albumY}" width="${albumSize}" height="${albumSize}" rx="${config.borderRadius}" fill="none" stroke="${highlight}" stroke-opacity="0.75" stroke-width="3" filter="url(#textGlow)" />
   `
       : generateMusicNotePlaceholder(
