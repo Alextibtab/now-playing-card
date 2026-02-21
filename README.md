@@ -40,4 +40,4 @@ A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
 <!----------------------------------{ Badges }--------------------------------->
 
 [Deno Badge]: https://img.shields.io/badge/Deno-2.x-black?logo=deno
-[License Badge]: https://img.shields.io/github/license/Alextibtab/tauon-now-playing
+[License Badge]: https://img.shields.io/github/license/alextibtab/tauon-now-playing
