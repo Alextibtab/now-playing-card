@@ -296,7 +296,7 @@ async function handleGetNowPlaying(kv: Deno.Kv): Promise<Response> {
   });
 }
 
-const MAX_PREVIEW_BODY = 1024 * 1024; // 1 MB
+const MAX_PREVIEW_BODY = 8 * 1024 * 1024; // 8 MB
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
 function clamp(value: number, min: number, max: number): number {
