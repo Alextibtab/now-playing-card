@@ -710,6 +710,75 @@
 
       // --- SVG sanitization ---
 
+      const DANGEROUS_ELEMENTS = new Set([
+        "script",
+        "foreignobject",
+        "iframe",
+        "object",
+        "embed",
+        "math",
+        "annotation-xml",
+      ]);
+
+      const URI_ATTRS = new Set([
+        "href",
+        "xlink:href",
+        "src",
+        "action",
+        "formaction",
+      ]);
+
+      // Normalize URI value: collapse whitespace and control chars
+      // that browsers ignore but attackers use to bypass filters
+      function normalizeUri(val) {
+        return val.replace(/[\s\x00-\x1f]+/g, "").toLowerCase();
+      }
+
+      function hasDangerousUri(val) {
+        const norm = normalizeUri(val);
+        if (/^(javascript|vbscript):/.test(norm)) return true;
+        // Allow data:image/* only — block data:text/html etc.
+        if (norm.startsWith("data:") && !/^data:image\//.test(norm)) {
+          return true;
+        }
+        return false;
+      }
+
+      function hasDangerousStyle(val) {
+        const norm = val.replace(/\s+/g, "").toLowerCase();
+        // expression() (IE), url(javascript:...), -moz-binding
+        if (/expression\s*\(/.test(norm)) return true;
+        if (/url\s*\(\s*(["']?)\s*javascript:/i.test(norm)) return true;
+        if (/-moz-binding/.test(norm)) return true;
+        return false;
+      }
+
+      function sanitizeElement(el) {
+        // Remove dangerous child elements
+        for (const child of [...el.children]) {
+          if (DANGEROUS_ELEMENTS.has(child.tagName.toLowerCase())) {
+            child.remove();
+            continue;
+          }
+          // Sanitize attributes on this child
+          for (const attr of [...child.attributes]) {
+            const name = attr.name.toLowerCase();
+            if (name.startsWith("on")) {
+              child.removeAttribute(attr.name);
+            } else if (
+              URI_ATTRS.has(name) && hasDangerousUri(attr.value)
+            ) {
+              child.removeAttribute(attr.name);
+            } else if (
+              name === "style" && hasDangerousStyle(attr.value)
+            ) {
+              child.removeAttribute(attr.name);
+            }
+          }
+          sanitizeElement(child);
+        }
+      }
+
       function sanitizeSvg(raw) {
         const doc = new DOMParser().parseFromString(
           raw,
@@ -721,29 +790,19 @@
         const svg = doc.documentElement;
         if (svg.tagName !== "svg") return null;
 
-        // Remove <script> elements and on* event handlers
-        const walk = (el) => {
-          for (const child of [...el.children]) {
-            if (child.tagName === "script") {
-              child.remove();
-              continue;
-            }
-            for (const attr of [...child.attributes]) {
-              if (attr.name.startsWith("on")) {
-                child.removeAttribute(attr.name);
-              }
-            }
-            walk(child);
-          }
-        };
-        walk(svg);
-
-        // Also strip on* from root <svg> itself
+        // Sanitize root <svg> attributes
         for (const attr of [...svg.attributes]) {
-          if (attr.name.startsWith("on")) {
+          const name = attr.name.toLowerCase();
+          if (name.startsWith("on")) {
+            svg.removeAttribute(attr.name);
+          } else if (
+            URI_ATTRS.has(name) && hasDangerousUri(attr.value)
+          ) {
             svg.removeAttribute(attr.name);
           }
         }
+
+        sanitizeElement(svg);
 
         return document.importNode(svg, true);
       }
