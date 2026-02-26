@@ -166,7 +166,13 @@ export function sanitizePreviewConfig(
   }
 
   for (
-    const key of ["showStatus", "showTitle", "showArtist", "showAlbum", "alwaysAnimate"] as const
+    const key of [
+      "showStatus",
+      "showTitle",
+      "showArtist",
+      "showAlbum",
+      "alwaysAnimate",
+    ] as const
   ) {
     if (typeof raw[key] === "boolean") {
       config[key] = raw[key] as boolean;
