@@ -17,5 +17,6 @@
   "fontTitleFile": "DotGothic16-Regular.ttf",
   "fontBodyFile": "SpaceMono-Regular.ttf",
   "fontFallback": "'Segoe UI', sans-serif",
-  "visualisation": "waveform"
+  "visualisation": "waveform",
+  "alwaysAnimate": true
 }
