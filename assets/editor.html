@@ -498,19 +498,19 @@
               <label>Visibility</label>
               <div class="checkbox-group">
                 <label class="checkbox-label">
-                  <input type="checkbox" id="showStatus" checked />
+                  <input type="checkbox" id="showStatus" />
                   Status
                 </label>
                 <label class="checkbox-label">
-                  <input type="checkbox" id="showTitle" checked />
+                  <input type="checkbox" id="showTitle" />
                   Title
                 </label>
                 <label class="checkbox-label">
-                  <input type="checkbox" id="showArtist" checked />
+                  <input type="checkbox" id="showArtist" />
                   Artist
                 </label>
                 <label class="checkbox-label">
-                  <input type="checkbox" id="showAlbum" checked />
+                  <input type="checkbox" id="showAlbum" />
                   Album
                 </label>
               </div>
@@ -1216,6 +1216,7 @@
           artBase64: artValue,
           updatedAt: Date.now(),
         });
+        syncControlsFromTheme(DEFAULT_THEME);
         renderPreview();
       }
 
