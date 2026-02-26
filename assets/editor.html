@@ -498,20 +498,30 @@
               <label>Visibility</label>
               <div class="checkbox-group">
                 <label class="checkbox-label">
-                  <input type="checkbox" id="showStatus" checked />
+                  <input type="checkbox" id="showStatus" />
                   Status
                 </label>
                 <label class="checkbox-label">
-                  <input type="checkbox" id="showTitle" checked />
+                  <input type="checkbox" id="showTitle" />
                   Title
                 </label>
                 <label class="checkbox-label">
-                  <input type="checkbox" id="showArtist" checked />
+                  <input type="checkbox" id="showArtist" />
                   Artist
                 </label>
                 <label class="checkbox-label">
-                  <input type="checkbox" id="showAlbum" checked />
+                  <input type="checkbox" id="showAlbum" />
                   Album
+                </label>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label>Animation</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="alwaysAnimate" />
+                  Always Animate
                 </label>
               </div>
             </div>
@@ -650,6 +660,7 @@
         fontBodyFile: "SpaceMono-Regular.ttf",
         fontFallback: "'Segoe UI', sans-serif",
         visualisation: "waveform",
+        alwaysAnimate: false,
       };
 
       const DEFAULT_DATA = {
@@ -696,6 +707,7 @@
       const showTitle = document.getElementById("showTitle");
       const showArtist = document.getElementById("showArtist");
       const showAlbum = document.getElementById("showAlbum");
+      const alwaysAnimate = document.getElementById("alwaysAnimate");
       const albumPosition = document.getElementById("albumPosition");
       const textAlignEl = document.getElementById("textAlign");
       const uploadBtn = document.getElementById("uploadBtn");
@@ -879,6 +891,9 @@
         if (typeof theme.showAlbum === "boolean") {
           showAlbum.checked = theme.showAlbum;
         }
+        if (typeof theme.alwaysAnimate === "boolean") {
+          alwaysAnimate.checked = theme.alwaysAnimate;
+        }
         if (theme.albumPosition) {
           albumPosition.value = theme.albumPosition;
         }
@@ -928,6 +943,7 @@
         theme.showTitle = showTitle.checked;
         theme.showArtist = showArtist.checked;
         theme.showAlbum = showAlbum.checked;
+        theme.alwaysAnimate = alwaysAnimate.checked;
         theme.albumPosition = albumPosition.value;
         theme.textAlign = textAlignEl.value;
         theme.visualisation = visSelect.value;
@@ -1044,6 +1060,7 @@
         showTitle,
         showArtist,
         showAlbum,
+        alwaysAnimate,
         albumPosition,
         textAlignEl,
       ].forEach((el) => el.addEventListener("change", onControlChange));
@@ -1159,6 +1176,7 @@
         showTitle.checked = true;
         showArtist.checked = true;
         showAlbum.checked = true;
+        alwaysAnimate.checked = false;
         albumPosition.value = "left";
         textAlignEl.value = "left";
         setColorInactive(
@@ -1198,6 +1216,7 @@
           artBase64: artValue,
           updatedAt: Date.now(),
         });
+        syncControlsFromTheme(DEFAULT_THEME);
         renderPreview();
       }
 

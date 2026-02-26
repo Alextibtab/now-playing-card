@@ -1,8 +1,8 @@
 {
   "tasks": {
-    "dev": "deno run --watch --allow-net --allow-env --allow-read --unstable-kv server.ts",
-    "poll": "deno run --allow-net --allow-env --allow-read poller.ts",
-    "check": "deno check server.ts poller.ts svg.ts types.ts",
+    "dev": "deno run --watch --allow-net --allow-env --allow-read --unstable-kv src/server.ts",
+    "poll": "deno run --allow-net --allow-env --allow-read src/poller/index.ts",
+    "check": "deno check src/server.ts src/poller/index.ts src/svg/index.ts src/types.ts",
     "fmt": "deno fmt"
   },
   "imports": {
