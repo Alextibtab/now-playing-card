@@ -112,3 +112,7 @@ export async function main(): Promise<void> {
 
   console.log("Poller running. Press Ctrl+C to stop.");
 }
+
+if (import.meta.main) {
+  await main();
+}

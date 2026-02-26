@@ -1,151 +1,83 @@
 import { defaultSvgConfig, NowPlayingData, SvgConfig } from "../types.ts";
 import { mixColors } from "./colors.ts";
 import { generateMusicNotePlaceholder } from "./icons.ts";
-import { escapeXml, estimateTextWidth, truncateText } from "./text.ts";
-import { hashString } from "./visualisations/waves.ts";
+import { escapeXml, truncateText } from "./text.ts";
 import { renderVisualisation } from "./visualisations/index.ts";
+import {
+  computeColors,
+  computeFontConfig,
+  computeLayout,
+  computePlaybackState,
+  computeTextConfig,
+} from "./config.ts";
 
-/**
- * Build the SVG widget for the current playback state.
- *
- * @param data Latest now playing payload or null for empty state.
- * @param config Visual configuration overrides.
- * @returns SVG markup as a string.
- */
 export function generateNowPlayingSvg(
   data: NowPlayingData | null,
   config: SvgConfig = defaultSvgConfig,
 ): string {
-  const isStale = data ? Date.now() - data.updatedAt > 5 * 60 * 1000 : true;
-  const isPlaying = data && data.status === "playing" && !isStale;
-  const isPaused = data && data.status === "paused" && !isStale;
-  const hasTrack = data && (isPlaying || isPaused || isStale);
-  const shouldAnimate = config.alwaysAnimate ? hasTrack : isPlaying;
-
-  // Use extracted colors or fall back to defaults.
-  // All color values are escaped for safe SVG attribute interpolation
-  // as defense-in-depth against injection via compromised KV data.
-  const dominantColor = escapeXml(data?.colors?.dominant || "#27272a");
-  const accentColor = escapeXml(data?.colors?.accent || "#22c55e");
-  const highlight = escapeXml(
-    data?.colors?.highlight || mixColors(accentColor, "#ffffff", 0.45),
+  const playback = computePlaybackState(data, config.alwaysAnimate);
+  const colors = computeColors(data, config, mixColors);
+  const layout = computeLayout(
+    config.width,
+    config.height,
+    config.albumSize,
+    config,
   );
+  const text = computeTextConfig(data, layout, (s) => {
+    let hash = 0;
+    for (let i = 0; i < s.length; i++) {
+      hash = ((hash << 5) - hash + s.charCodeAt(i)) | 0;
+    }
+    return hash;
+  });
+  const fonts = computeFontConfig(config);
 
-  // If the theme specifies card colors, use them directly.
-  // Otherwise derive from the album art's dominant color.
-  const baseDark = escapeXml(
-    config.cardBackground || mixColors(dominantColor, "#050505", 0.82),
-  );
-  const midDark = escapeXml(
-    config.cardBackground
-      ? mixColors(config.cardBackground, "#0d0f12", 0.3)
-      : mixColors(dominantColor, "#0d0f12", 0.7),
-  );
-  const borderColor = escapeXml(config.cardBorder || midDark);
-  const textPrimary = escapeXml(config.textPrimary);
-  const textSecondary = escapeXml(config.textSecondary);
-  const textMuted = escapeXml(config.textMuted);
+  const { width, height, albumSize } = config;
+  const {
+    albumX,
+    albumY,
+    textAreaLeft,
+    textAnchor,
+    textX,
+    titleY,
+    artistY,
+    albumYPos,
+    titleClipWidth,
+  } = layout;
+  const {
+    highlight,
+    accentColor,
+    baseDark,
+    midDark,
+    borderColor,
+    textPrimary,
+    textSecondary,
+    textMuted,
+  } = colors;
+  const {
+    titleFontSize,
+    artistFontSize,
+    albumFontSize,
+    titleScrollDistance,
+    titleScrollNeeded,
+    titleMaxChars,
+    artistMaxChars,
+    albumMaxChars,
+  } = text;
+  const { fontTitleFamily, fontBodyFamily, styleBlock } = fonts;
 
-  const width = config.width;
-  const height = config.height;
-  const albumSize = config.albumSize;
-  const padding = 26;
-  const albumPosition = config.albumPosition || "left";
-  const albumX = albumPosition === "right"
-    ? width - padding - albumSize
-    : padding;
-  const albumY = (height - albumSize) / 2;
-  const textAlign = config.textAlign || "left";
-  const textAreaLeft = albumPosition === "right"
-    ? padding
-    : albumX + albumSize + 22;
-  const textAreaRight = albumPosition === "right"
-    ? albumX - 22
-    : width - padding;
-  const textAreaWidth = Math.max(0, textAreaRight - textAreaLeft);
-  const textAnchor = textAlign === "right"
-    ? "end"
-    : textAlign === "center"
-    ? "middle"
-    : "start";
-  const textX = textAlign === "right"
-    ? textAreaRight
-    : textAlign === "center"
-    ? textAreaLeft + textAreaWidth / 2
-    : textAreaLeft;
   const barsStartX = 2;
   const barsEndX = width - 2;
   const waveBaseY = height - 2;
   const waveHeight = 180;
-  const titleFontSize = 24;
-  const artistFontSize = 15;
-  const albumFontSize = 13;
-  const titleY = albumY + 40;
-  const artistY = albumY + 76;
-  const albumYPos = albumY + 90;
-  const titleClipWidth = textAreaWidth;
-  const titleText = data?.title || "";
-  const titleSeed = hashString(titleText || "tauon");
-  const titleTextWidth = estimateTextWidth(titleText, titleFontSize);
-  const titleGap = 36;
-  const titleScrollDistance = Math.max(
-    titleTextWidth + titleGap,
-    titleClipWidth + titleGap,
-  );
-  const titleScrollNeeded = textAlign !== "center" && titleClipWidth > 0 &&
-    estimateTextWidth(titleText, titleFontSize) > titleClipWidth;
-  const titleMaxChars = Math.max(
-    10,
-    Math.floor(textAreaWidth / (titleFontSize * 0.55)),
-  );
-  const artistMaxChars = Math.max(
-    10,
-    Math.floor(textAreaWidth / (artistFontSize * 0.55)),
-  );
-  const albumMaxChars = Math.max(
-    10,
-    Math.floor(textAreaWidth / (albumFontSize * 0.55)),
-  );
-  const fontFallback = escapeXml(config.fontFallback || "sans-serif");
-  const fontTitleFamily = config.fontTitleFamily
-    ? `'${escapeXml(config.fontTitleFamily)}', ${fontFallback}`
-    : fontFallback;
-  const fontBodyFamily = config.fontBodyFamily
-    ? `'${escapeXml(config.fontBodyFamily)}', ${fontFallback}`
-    : fontFallback;
-  const fontFaces = [
-    config.fontTitleDataUrl && config.fontTitleFamily
-      ? `@font-face {
-  font-family: '${escapeXml(config.fontTitleFamily)}';
-  src: url(${escapeXml(config.fontTitleDataUrl)}) format('${
-        escapeXml(config.fontTitleFormat || "truetype")
-      }');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}`
-      : "",
-    config.fontBodyDataUrl && config.fontBodyFamily
-      ? `@font-face {
-  font-family: '${escapeXml(config.fontBodyFamily)}';
-  src: url(${escapeXml(config.fontBodyDataUrl)}) format('${
-        escapeXml(config.fontBodyFormat || "truetype")
-      }');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}`
-      : "",
-  ].filter(Boolean).join("\n");
-  const styleBlock = fontFaces ? `<style>${fontFaces}</style>` : "";
 
   const vis = renderVisualisation(config.visualisation, {
     startX: barsStartX,
     endX: barsEndX,
     baseY: waveBaseY,
     height: waveHeight,
-    seed: titleSeed,
-    isPlaying: !!shouldAnimate,
+    seed: text.titleSeed,
+    isPlaying: !!playback.shouldAnimate,
     highlight,
     accent: accentColor,
   });
@@ -198,7 +130,7 @@ export function generateNowPlayingSvg(
   <!-- Text content -->
   <g font-family="${fontBodyFamily}">
     ${
-    hasTrack
+    playback.hasTrack
       ? `
     ${
         config.showStatus
@@ -207,7 +139,7 @@ export function generateNowPlayingSvg(
     <text x="${textX}" y="${
             albumY + 18
           }" fill="${highlight}" font-size="12" font-weight="700" letter-spacing="0.12em" filter="url(#textGlow)" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
-      ${isStale ? "LAST PLAYED" : isPlaying ? "NOW PLAYING" : "PAUSED"}
+      ${playback.statusLabel}
     </text>
     `
           : ""
@@ -223,12 +155,12 @@ export function generateNowPlayingSvg(
     <g clip-path="url(#titleClip)">
       <g>
         <text x="${textAreaLeft}" y="${titleY}" fill="${textPrimary}" font-size="${titleFontSize}" font-weight="600" filter="url(#textGlow)" font-family="${fontTitleFamily}">
-          ${escapeXml(data.title)}
+          ${escapeXml(data?.title ?? "")}
         </text>
         <text x="${
                 textAreaLeft + titleScrollDistance
               }" y="${titleY}" fill="${textPrimary}" font-size="${titleFontSize}" font-weight="600" filter="url(#textGlow)" font-family="${fontTitleFamily}">
-          ${escapeXml(data.title)}
+          ${escapeXml(data?.title ?? "")}
         </text>
         <animateTransform attributeName="transform" type="translate" from="0 0" to="-${titleScrollDistance} 0" dur="15s" repeatCount="indefinite" />
       </g>
@@ -236,7 +168,7 @@ export function generateNowPlayingSvg(
     `
               : `
     <text x="${textX}" y="${titleY}" fill="${textPrimary}" font-size="${titleFontSize}" font-weight="600" text-overflow="ellipsis" filter="url(#textGlow)" text-anchor="${textAnchor}" font-family="${fontTitleFamily}">
-      ${escapeXml(truncateText(data.title, titleMaxChars))}
+      ${escapeXml(truncateText(data?.title ?? "", titleMaxChars))}
     </text>
     `
           }
@@ -249,7 +181,7 @@ export function generateNowPlayingSvg(
           ? `
     <!-- Artist -->
     <text x="${textX}" y="${artistY}" fill="${textSecondary}" font-size="${artistFontSize}" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
-      ${escapeXml(truncateText(data.artist, artistMaxChars))}
+      ${escapeXml(truncateText(data?.artist ?? "", artistMaxChars))}
     </text>
     `
           : ""
@@ -260,7 +192,7 @@ export function generateNowPlayingSvg(
           ? `
     <!-- Album and status -->
     <text x="${textX}" y="${albumYPos}" fill="${textMuted}" font-size="${albumFontSize}" text-anchor="${textAnchor}" font-family="${fontBodyFamily}">
-      ${escapeXml(truncateText(data.album, albumMaxChars))}
+      ${escapeXml(truncateText(data?.album ?? "", albumMaxChars))}
     </text>
     `
           : ""
@@ -278,7 +210,7 @@ export function generateNowPlayingSvg(
   </g>
 
   ${
-    hasTrack && data.artBase64
+    playback.hasTrack && data?.artBase64
       ? `
   <!-- Album art with rounded corners -->
   <image x="${albumX}" y="${albumY}" width="${albumSize}" height="${albumSize}" xlink:href="data:image/jpeg;base64,${
@@ -286,12 +218,7 @@ export function generateNowPlayingSvg(
       }" clip-path="url(#albumClip)" preserveAspectRatio="xMidYMid slice" filter="url(#glow)" />
   <rect x="${albumX}" y="${albumY}" width="${albumSize}" height="${albumSize}" rx="${config.borderRadius}" fill="none" stroke="${highlight}" stroke-opacity="0.75" stroke-width="3" filter="url(#textGlow)" />
   `
-      : generateMusicNotePlaceholder(
-        albumX,
-        albumY,
-        albumSize,
-        highlight,
-      )
+      : generateMusicNotePlaceholder(albumX, albumY, albumSize, highlight)
   }
 </svg>`;
 

@@ -6,12 +6,17 @@ Deno TypeScript project for a Tauon Music Player "now playing" widget.
 
 **Architecture:**
 
-- `server.ts` - Deno Deploy API: serves SVG widget, receives data via KV
-- `poller.ts` - Local poller: polls Tauon API, resizes album art, pushes to
-  Deploy API
-- `svg.ts` - Pure SVG card generation (no foreignObject for GitHub
+- `src/server.ts` - Deno Deploy API: serves SVG widget, receives data via KV
+- `src/server/storage.ts` - KV operations
+- `src/server/auth.ts` - Authentication
+- `src/server/fonts.ts` - Font loading/caching
+- `src/server/themes.ts` - Theme loading/validation
+- `src/server/config.ts` - Config parsing
+- `src/poller/index.ts` - Local poller: polls Tauon API, resizes album art,
+  pushes to Deploy API
+- `src/svg/index.ts` - Pure SVG card generation (no foreignObject for GitHub
   compatibility)
-- `types.ts` - Shared TypeScript types
+- `src/types.ts` - Shared TypeScript types
 
 The widget displays currently playing track from Tauon Music Player on GitHub
 README.
@@ -44,7 +49,7 @@ deno test --filter "testName"
 deno lint
 
 # Cache dependencies
-deno cache --unstable-kv server.ts
+deno cache --unstable-kv src/server.ts
 ```
 
 ## Environment Variables
@@ -77,7 +82,7 @@ deno cache --unstable-kv server.ts
 - Use JSR registry imports defined in `deno.json` imports field
 - Import format: `import { assertEquals } from "@std/assert";`
 - Use relative imports for local modules:
-  `import { generateNowPlayingSvg } from "./svg.ts";`
+  `import { generateNowPlayingSvg } from "./svg/index.ts";`
 - Always include `.ts` extension in relative imports
 - Use npm packages when needed: `import sharp from "sharp";`
 
@@ -125,7 +130,7 @@ deno cache --unstable-kv server.ts
 - Export functions/types at the bottom or inline
 - Use `if (import.meta.main)` guard for CLI entry points
 - Keep modules focused on single responsibility
-- Use shared types from `types.ts` for data contracts
+- Use shared types from `src/types.ts` for data contracts
 
 ## Deno Configuration
 
