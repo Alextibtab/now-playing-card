@@ -20,6 +20,7 @@ export function generateNowPlayingSvg(
   const isPlaying = data && data.status === "playing" && !isStale;
   const isPaused = data && data.status === "paused" && !isStale;
   const hasTrack = data && (isPlaying || isPaused || isStale);
+  const shouldAnimate = config.alwaysAnimate ? hasTrack : isPlaying;
 
   // Use extracted colors or fall back to defaults.
   // All color values are escaped for safe SVG attribute interpolation
@@ -144,7 +145,7 @@ export function generateNowPlayingSvg(
     baseY: waveBaseY,
     height: waveHeight,
     seed: titleSeed,
-    isPlaying: !!isPlaying,
+    isPlaying: !!shouldAnimate,
     highlight,
     accent: accentColor,
   });
