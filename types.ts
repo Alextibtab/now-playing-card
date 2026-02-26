@@ -91,6 +91,7 @@ export interface SvgConfig {
   fontTitleFormat?: string;
   fontBodyFormat?: string;
   visualisation: VisualisationType;
+  alwaysAnimate: boolean;
 }
 
 export const defaultSvgConfig: SvgConfig = {
@@ -113,4 +114,5 @@ export const defaultSvgConfig: SvgConfig = {
   fontBodyFile: "SpaceMono-Regular.ttf",
   fontFallback: "'Segoe UI', sans-serif",
   visualisation: "waveform",
+  alwaysAnimate: false,
 };
