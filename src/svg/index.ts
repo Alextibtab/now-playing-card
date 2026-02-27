@@ -105,8 +105,8 @@ export function generateNowPlayingSvg(
     </clipPath>
     <clipPath id="titleClip" clipPathUnits="userSpaceOnUse">
       <rect x="${textAreaLeft}" y="${
-    albumY + 34
-  }" width="${titleClipWidth}" height="26" />
+    albumY + 18
+  }" width="${titleClipWidth}" height="36" />
     </clipPath>
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
       <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="${highlight}" flood-opacity="0.65" />
