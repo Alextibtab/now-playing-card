@@ -478,8 +478,7 @@
               <label>Playback State</label>
               <select id="statusSelect">
                 <option value="playing">Playing</option>
-                <option value="paused">Paused</option>
-                <option value="last-played">Last Played (stale)</option>
+                <option value="last-played">Last Played</option>
                 <option value="empty">Nothing Playing</option>
               </select>
             </div>
@@ -512,16 +511,6 @@
                 <label class="checkbox-label">
                   <input type="checkbox" id="showAlbum" />
                   Album
-                </label>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <label>Animation</label>
-              <div class="checkbox-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="alwaysAnimate" />
-                  Always Animate
                 </label>
               </div>
             </div>
@@ -660,17 +649,12 @@
         fontBodyFile: "SpaceMono-Regular.ttf",
         fontFallback: "'Segoe UI', sans-serif",
         visualisation: "waveform",
-        alwaysAnimate: false,
       };
 
       const DEFAULT_DATA = {
         title: "Resonance",
         artist: "HOME",
         album: "Odyssey",
-        albumArtist: "HOME",
-        trackNumber: "5",
-        duration: 213,
-        progress: 87,
         status: "playing",
         artBase64: null,
         colors: {
@@ -678,7 +662,7 @@
           accent: "#332550",
           highlight: "#e67ab2",
         },
-        updatedAt: 0,
+        updatedAt: Date.now(),
       };
 
       const cardBgRow = document.getElementById("cardBgRow");
@@ -707,7 +691,6 @@
       const showTitle = document.getElementById("showTitle");
       const showArtist = document.getElementById("showArtist");
       const showAlbum = document.getElementById("showAlbum");
-      const alwaysAnimate = document.getElementById("alwaysAnimate");
       const albumPosition = document.getElementById("albumPosition");
       const textAlignEl = document.getElementById("textAlign");
       const uploadBtn = document.getElementById("uploadBtn");
@@ -891,9 +874,6 @@
         if (typeof theme.showAlbum === "boolean") {
           showAlbum.checked = theme.showAlbum;
         }
-        if (typeof theme.alwaysAnimate === "boolean") {
-          alwaysAnimate.checked = theme.alwaysAnimate;
-        }
         if (theme.albumPosition) {
           albumPosition.value = theme.albumPosition;
         }
@@ -943,7 +923,6 @@
         theme.showTitle = showTitle.checked;
         theme.showArtist = showArtist.checked;
         theme.showAlbum = showAlbum.checked;
-        theme.alwaysAnimate = alwaysAnimate.checked;
         theme.albumPosition = albumPosition.value;
         theme.textAlign = textAlignEl.value;
         theme.visualisation = visSelect.value;
@@ -970,12 +949,9 @@
         if (mode === "playing") {
           data.status = "playing";
           data.updatedAt = Date.now();
-        } else if (mode === "paused") {
-          data.status = "paused";
-          data.updatedAt = Date.now();
         } else if (mode === "last-played") {
-          data.status = "playing";
-          data.updatedAt = Date.now() - 10 * 60 * 1000;
+          data.status = "last-played";
+          data.updatedAt = Date.now();
         }
         return data;
       }
@@ -1060,7 +1036,6 @@
         showTitle,
         showArtist,
         showAlbum,
-        alwaysAnimate,
         albumPosition,
         textAlignEl,
       ].forEach((el) => el.addEventListener("change", onControlChange));
@@ -1176,7 +1151,6 @@
         showTitle.checked = true;
         showArtist.checked = true;
         showAlbum.checked = true;
-        alwaysAnimate.checked = false;
         albumPosition.value = "left";
         textAlignEl.value = "left";
         setColorInactive(

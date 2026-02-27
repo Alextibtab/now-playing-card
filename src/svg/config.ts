@@ -1,33 +1,34 @@
 import { escapeXml, estimateTextWidth } from "./text.ts";
 
+const STALE_THRESHOLD_MS = 5 * 60 * 1000;
+
 export interface PlaybackState {
-  isStale: boolean;
   isPlaying: boolean;
-  isPaused: boolean;
+  isLastPlayed: boolean;
   hasTrack: boolean;
-  shouldAnimate: boolean;
   statusLabel: string;
 }
 
 export function computePlaybackState(
   data: { status?: string; updatedAt?: number } | null,
-  alwaysAnimate: boolean,
 ): PlaybackState {
-  const isStale = data
-    ? Date.now() - (data.updatedAt ?? 0) > 5 * 60 * 1000
-    : true;
-  const status = data?.status;
-  const isPlaying = status === "playing" && isStale === false;
-  const isPaused = status === "paused" && isStale === false;
-  const hasTrack = !!(data && (isPlaying || isPaused || isStale));
-  const shouldAnimate = alwaysAnimate ? hasTrack : isPlaying;
-  const statusLabel = isStale
-    ? "LAST PLAYED"
-    : isPlaying
-    ? "NOW PLAYING"
-    : "PAUSED";
+  const now = Date.now();
+  const updatedAt = data?.updatedAt ?? 0;
+  const isStale = now - updatedAt > STALE_THRESHOLD_MS;
 
-  return { isStale, isPlaying, isPaused, hasTrack, shouldAnimate, statusLabel };
+  const status = data?.status;
+  const isPlaying = status === "playing" && !isStale;
+  const isLastPlayed = status === "last-played" ||
+    (status === "playing" && isStale);
+  const hasTrack = !!(data && (isPlaying || isLastPlayed));
+  const statusLabel = isPlaying ? "NOW PLAYING" : "LAST PLAYED";
+
+  return {
+    isPlaying,
+    isLastPlayed,
+    hasTrack,
+    statusLabel,
+  };
 }
 
 export interface ColorConfig {

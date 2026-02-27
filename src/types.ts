@@ -42,11 +42,7 @@ export interface NowPlayingData {
   title: string;
   artist: string;
   album: string;
-  albumArtist: string;
-  trackNumber: string;
-  duration: number;
-  progress: number;
-  status: "playing" | "paused";
+  status: "playing" | "last-played";
   artBase64: string | null;
   colors: ColorPalette | null;
   updatedAt: number;
@@ -91,7 +87,6 @@ export interface SvgConfig {
   fontTitleFormat?: string;
   fontBodyFormat?: string;
   visualisation: VisualisationType;
-  alwaysAnimate: boolean;
 }
 
 export const defaultSvgConfig: SvgConfig = {
@@ -114,5 +109,13 @@ export const defaultSvgConfig: SvgConfig = {
   fontBodyFile: "SpaceMono-Regular.ttf",
   fontFallback: "'Segoe UI', sans-serif",
   visualisation: "waveform",
-  alwaysAnimate: false,
 };
+
+export type SourceType = "tauon" | "spotify" | "lastfm" | "tidal";
+
+export const SOURCE_TYPES: readonly SourceType[] = [
+  "tauon",
+  "spotify",
+  "lastfm",
+  "tidal",
+];

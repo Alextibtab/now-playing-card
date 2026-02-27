@@ -2,11 +2,12 @@
   "tasks": {
     "dev": "deno run --watch --allow-net --allow-env --allow-read --unstable-kv src/server.ts",
     "poll": "deno run --allow-net --allow-env --allow-read src/poller/index.ts",
-    "check": "deno check src/server.ts src/poller/index.ts src/svg/index.ts src/types.ts",
+    "check": "deno check src/server.ts src/poller/index.ts src/sources/lastfm/index.ts src/utils/image-processing.ts",
     "fmt": "deno fmt"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225",
     "@std/encoding": "jsr:@std/encoding@1",
     "imagescript": "jsr:@matmen/imagescript@1"
   },

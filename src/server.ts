@@ -1,14 +1,17 @@
 import {
   defaultSvgConfig,
   NowPlayingData,
+  SourceType,
   SvgConfig,
   VISUALISATION_TYPES,
 } from "./types.ts";
 import { encodeBase64 } from "@std/encoding";
+import { load } from "@std/dotenv";
 import { generateNowPlayingSvg } from "./svg/index.ts";
-import { validateAuth } from "./server/auth.ts";
-import { getNowPlaying, storeNowPlaying } from "./server/storage.ts";
+import { validateAuth } from "./server/authentication.ts";
+import { getNowPlaying, storeNowPlaying } from "./server/kv-storage.ts";
 import { buildSvgConfig, sanitizePreviewConfig } from "./server/config.ts";
+import { fetchLastFm } from "./sources/lastfm/index.ts";
 
 const editorCache: { template: string | null } = { template: null };
 
@@ -18,7 +21,7 @@ function generateNonce(): string {
   return encodeBase64(bytes);
 }
 
-async function handlePostNowPlaying(
+async function handlePostTauonNowPlaying(
   req: Request,
   kv: Deno.Kv,
 ): Promise<Response> {
@@ -31,9 +34,9 @@ async function handlePostNowPlaying(
 
   try {
     const text = await req.text();
-    console.log(`Received POST: ${text.length} chars`);
+    console.log(`Received POST [tauon]: ${text.length} chars`);
     const data = JSON.parse(text) as NowPlayingData;
-    await storeNowPlaying(kv, data);
+    await storeNowPlaying(kv, "tauon", data);
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -47,8 +50,12 @@ async function handlePostNowPlaying(
   }
 }
 
-async function handleGetSvg(req: Request, kv: Deno.Kv): Promise<Response> {
-  const data = await getNowPlaying(kv);
+async function handleGetSvg(
+  req: Request,
+  kv: Deno.Kv,
+  source: SourceType,
+): Promise<Response> {
+  const data = await fetchNowPlaying(kv, source);
   const params = new URL(req.url).searchParams;
   const config = await buildSvgConfig(params);
   const svg = generateNowPlayingSvg(data, config);
@@ -62,8 +69,35 @@ async function handleGetSvg(req: Request, kv: Deno.Kv): Promise<Response> {
   });
 }
 
-async function handleGetNowPlaying(kv: Deno.Kv): Promise<Response> {
-  const data = await getNowPlaying(kv);
+async function fetchNowPlaying(
+  kv: Deno.Kv,
+  source: SourceType,
+): Promise<NowPlayingData | null> {
+  if (source === "tauon") {
+    return await getNowPlaying(kv, source);
+  }
+
+  if (source === "lastfm") {
+    const apiKey = Deno.env.get("LASTFM_API_KEY");
+    const username = Deno.env.get("LASTFM_USERNAME");
+
+    if (!apiKey || !username) {
+      console.warn("LastFM credentials not configured");
+      return null;
+    }
+
+    return fetchLastFm(apiKey, username);
+  }
+
+  console.warn(`Source "${source}" not implemented`);
+  return null;
+}
+
+async function handleGetNowPlaying(
+  kv: Deno.Kv,
+  source: SourceType,
+): Promise<Response> {
+  const data = await fetchNowPlaying(kv, source);
   return new Response(JSON.stringify(data), {
     status: 200,
     headers: {
@@ -120,7 +154,7 @@ async function handlePreviewRender(req: Request): Promise<Response> {
         "Cache-Control": "no-cache",
       },
     });
-  } catch (_error) {
+  } catch {
     return new Response(JSON.stringify({ error: "Invalid request body" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
@@ -140,36 +174,26 @@ async function handleGetEditor(): Promise<Response> {
       editorCache.template = html;
     }
     const nonce = generateNonce();
-    const html = editorCache.template.replaceAll(
-      "{{CSP_NONCE}}",
-      nonce,
-    );
+    const html = editorCache.template.replaceAll("{{CSP_NONCE}}", nonce);
     return new Response(html, {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-cache",
-        "Content-Security-Policy": `default-src 'none'; ` +
-          `script-src 'nonce-${nonce}'; ` +
-          `style-src 'nonce-${nonce}'; ` +
-          `img-src data:; ` +
-          `font-src data:; ` +
-          `connect-src 'self'`,
+        "Content-Security-Policy":
+          `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; img-src data:; font-src data:; connect-src 'self'`,
         "X-Frame-Options": "DENY",
       },
     });
-  } catch (_error) {
+  } catch {
     return new Response(
       JSON.stringify({ error: "Editor page not found" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
+      { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 }
 
-function handleGetPreview(req: Request): Response {
+function handleGetPreview(req: Request, source: SourceType): Response {
   const params = new URL(req.url).searchParams;
   const nonce = generateNonce();
 
@@ -178,12 +202,14 @@ function handleGetPreview(req: Request): Response {
   const extraStr = extraParams.toString();
   const suffix = extraStr ? `&${extraStr}` : "";
 
+  const svgPath = `/${source}/now-playing.svg`;
+
   const widgets = VISUALISATION_TYPES.map(
     (vis) =>
       `<div class="widget-section">
         <h2>${vis}</h2>
         <div class="widget">
-          <img src="/now-playing.svg?vis=${vis}${suffix}" alt="${vis} visualisation" />
+          <img src="${svgPath}?vis=${vis}${suffix}" alt="${vis} visualisation" />
         </div>
       </div>`,
   );
@@ -202,10 +228,7 @@ function handleGetPreview(req: Request): Response {
         background: #0b0c0f;
         color: #e5e7eb;
       }
-      .container {
-        max-width: 900px;
-        margin: 0 auto;
-      }
+      .container { max-width: 900px; margin: 0 auto; }
       .widget-section {
         background: #0f1115;
         border: 1px solid #1f2430;
@@ -222,16 +245,8 @@ function handleGetPreview(req: Request): Response {
         letter-spacing: 0.1em;
         color: #94a3b8;
       }
-      .widget {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-      }
-      .widget img {
-        display: block;
-        width: 800px;
-        height: auto;
-      }
+      .widget { width: 100%; display: flex; justify-content: center; }
+      .widget img { display: block; width: 800px; height: auto; }
     </style>
   </head>
   <body>
@@ -246,12 +261,21 @@ function handleGetPreview(req: Request): Response {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-cache",
-      "Content-Security-Policy": `default-src 'none'; ` +
-        `style-src 'nonce-${nonce}'; ` +
-        `img-src 'self'`,
+      "Content-Security-Policy":
+        `default-src 'none'; style-src 'nonce-${nonce}'; img-src 'self'`,
       "X-Frame-Options": "DENY",
     },
   });
+}
+
+function parseSourceFromPath(
+  path: string,
+): { source: SourceType; remaining: string } | null {
+  const match = path.match(/^\/(tauon|spotify|lastfm|tidal)(\/.*)?$/);
+  if (match) {
+    return { source: match[1] as SourceType, remaining: match[2] || "/" };
+  }
+  return null;
 }
 
 async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
@@ -271,34 +295,77 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
   try {
     let response: Response;
 
-    if (path === "/now-playing.svg" && req.method === "GET") {
-      response = await handleGetSvg(req, kv);
+    const parsed = parseSourceFromPath(path);
+
+    if (parsed) {
+      const { source, remaining } = parsed;
+
+      if (remaining === "/now-playing.svg" && req.method === "GET") {
+        response = await handleGetSvg(req, kv, source);
+      } else if (remaining === "/preview" && req.method === "GET") {
+        response = handleGetPreview(req, source);
+      } else if (
+        remaining === "/api/now-playing" &&
+        req.method === "POST" &&
+        source === "tauon"
+      ) {
+        response = await handlePostTauonNowPlaying(req, kv);
+      } else if (remaining === "/api/now-playing" && req.method === "GET") {
+        response = await handleGetNowPlaying(kv, source);
+      } else if (remaining === "/") {
+        response = new Response(
+          JSON.stringify({
+            source,
+            endpoints: {
+              widget: `/${source}/now-playing.svg`,
+              preview: `/${source}/preview`,
+              update: source === "tauon"
+                ? `POST /${source}/api/now-playing`
+                : null,
+              debug: `GET /${source}/api/now-playing`,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      } else {
+        response = new Response(JSON.stringify({ error: "Not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
     } else if (path === "/editor" && req.method === "GET") {
       response = await handleGetEditor();
     } else if (path === "/api/preview" && req.method === "POST") {
       response = await handlePreviewRender(req);
-    } else if (path === "/preview" && req.method === "GET") {
-      response = handleGetPreview(req);
-    } else if (path === "/api/now-playing" && req.method === "POST") {
-      response = await handlePostNowPlaying(req, kv);
-    } else if (path === "/api/now-playing" && req.method === "GET") {
-      response = await handleGetNowPlaying(kv);
     } else if (path === "/") {
       response = new Response(
         JSON.stringify({
-          endpoints: {
-            widget: "/now-playing.svg",
-            preview: "/preview",
+          sources: {
+            tauon: {
+              type: "poller",
+              widget: "/tauon/now-playing.svg",
+              update: "POST /tauon/api/now-playing (requires API_KEY)",
+            },
+            lastfm: {
+              type: "direct",
+              widget: "/lastfm/now-playing.svg",
+              config: "LASTFM_API_KEY + LASTFM_USERNAME",
+            },
+            spotify: {
+              type: "direct",
+              widget: "/spotify/now-playing.svg (not implemented)",
+            },
+            tidal: {
+              type: "direct",
+              widget: "/tidal/now-playing.svg (not implemented)",
+            },
+          },
+          utility: {
             editor: "/editor",
-            render: "POST /api/preview",
-            update: "POST /api/now-playing",
-            debug: "/api/now-playing",
+            preview: "POST /api/preview",
           },
         }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
+        { status: 200, headers: { "Content-Type": "application/json" } },
       );
     } else {
       response = new Response(JSON.stringify({ error: "Not found" }), {
@@ -340,6 +407,8 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
 }
 
 async function main(): Promise<void> {
+  await load({ export: true });
+
   const kv = await Deno.openKv();
   console.log("KV connected");
 
