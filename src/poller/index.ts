@@ -1,8 +1,8 @@
 import { ColorPalette, NowPlayingData } from "../types.ts";
-import { fetchAndResizeArt } from "./art.ts";
-import { sendToDeploy } from "./deploy.ts";
+import { fetchAndResizeArt } from "./album-art.ts";
+import { sendToDeploy } from "./api-client.ts";
 import { shouldUpdate } from "./state.ts";
-import { fetchTauonStatus } from "./tauon.ts";
+import { fetchTauonStatus } from "./tauon-api.ts";
 
 // Configuration from environment
 const TAUON_URL = Deno.env.get("TAUON_URL") || "http://localhost:7814";
@@ -79,12 +79,7 @@ async function poll(): Promise<void> {
     title: status.title || status.track?.title || "Unknown Title",
     artist: status.artist || status.track?.artist || "Unknown Artist",
     album: status.album || status.track?.album || "Unknown Album",
-    albumArtist: status.track?.album_artist || status.artist ||
-      "Unknown Artist",
-    trackNumber: status.track?.track_number || "",
-    duration: status.track?.duration || 0,
-    progress: status.progress,
-    status: status.status,
+    status: status.status === "playing" ? "playing" : "last-played",
     artBase64,
     colors,
     updatedAt: Date.now(),

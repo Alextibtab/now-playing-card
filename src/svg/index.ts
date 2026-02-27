@@ -15,7 +15,7 @@ export function generateNowPlayingSvg(
   data: NowPlayingData | null,
   config: SvgConfig = defaultSvgConfig,
 ): string {
-  const playback = computePlaybackState(data, config.alwaysAnimate);
+  const playback = computePlaybackState(data);
   const colors = computeColors(data, config, mixColors);
   const layout = computeLayout(
     config.width,
@@ -77,7 +77,7 @@ export function generateNowPlayingSvg(
     baseY: waveBaseY,
     height: waveHeight,
     seed: text.titleSeed,
-    isPlaying: !!playback.shouldAnimate,
+    isPlaying: playback.hasTrack,
     highlight,
     accent: accentColor,
   });

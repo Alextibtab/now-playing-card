@@ -21,7 +21,7 @@ export async function sendToDeploy(
       }KB)`,
     );
 
-    const response = await fetch(`${deployUrl}/api/now-playing`, {
+    const response = await fetch(`${deployUrl}/tauon/api/now-playing`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,

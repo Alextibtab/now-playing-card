@@ -171,7 +171,6 @@ export function sanitizePreviewConfig(
       "showTitle",
       "showArtist",
       "showAlbum",
-      "alwaysAnimate",
     ] as const
   ) {
     if (typeof raw[key] === "boolean") {
