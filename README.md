@@ -5,7 +5,7 @@
 [![Deno][Deno Badge]][Deno] [![License][License Badge]][License]
 <br>
 
-![Now Playing Widget](https://tauon-now-playing.alextibtab.deno.net/now-playing.svg)
+![Now Playing Widget](https://tauon-now-playing.alextibtab.deno.net/tauon/now-playing.svg)
 <br>
 
 A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
