@@ -1,6 +1,6 @@
 <div align="center">
 
-# Tauon Now Playing
+# Now Playing
 
 [![Deno][Deno Badge]][Deno] [![License][License Badge]][License]
 <br>
@@ -8,7 +8,7 @@
 ![Now Playing Widget](https://tauon-now-playing.alextibtab.deno.net/tauon/now-playing.svg)
 <br>
 
-A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
+A minimalist "now playing" widget for GitHub READMEs.
 
 <a href="https://console.deno.com/new?clone=https://github.com/Alextibtab/tauon-now-playing"><img align="center" src="https://deno.com/button" alt="Deploy on Deno"/></a>
 <br>
@@ -17,18 +17,12 @@ A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
 
 **[<kbd> <br> Setup <br> </kbd>][Setup]**
 **[<kbd> <br> Configure <br> </kbd>][Configure]**
+**[<kbd> <br> Editor <br> </kbd>][Editor]**
 
 ---
 <br>
 
 </div>
-
-## Features
-
-- Pure SVG — GitHub-compatible, no foreignObject
-- Album art with extracted accent colors
-- Animated waveform background
-- Deno Deploy + KV for stateless hosting
 
 <!----------------------------------------------------------------------------->
 
@@ -36,6 +30,7 @@ A minimalist "now playing" widget for Tauon Music Player on GitHub READMEs.
 [License]: LICENSE
 [Setup]: https://github.com/Alextibtab/tauon-now-playing/wiki/Setup
 [Configure]: https://github.com/Alextibtab/tauon-now-playing/wiki/Configure
+[Editor]: https://tauon-now-playing.alextibtab.deno.net/editor
 
 <!----------------------------------{ Badges }--------------------------------->
 
