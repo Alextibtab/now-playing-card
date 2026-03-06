@@ -9,6 +9,7 @@ import { loadTheme } from "./themes.ts";
 const FONT_FAMILY_PATTERN = /^[a-z0-9 _-]+$/i;
 const FONT_FALLBACK_PATTERN = /^[a-z0-9 _,'-]+$/i;
 const THEME_NAME_PATTERN = /^[a-z0-9_-]+$/i;
+const VALID_FONT_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
 export function parseBooleanParam(value: string | null): boolean | undefined {
   if (!value) return undefined;
@@ -39,7 +40,7 @@ export function parseFontFamily(value: string | null): string | undefined {
 export function parseFontWeight(value: string | null): number | undefined {
   if (!value) return undefined;
   const weight = parseInt(value, 10);
-  if (isNaN(weight) || weight < 100 || weight > 900) return undefined;
+  if (isNaN(weight) || !VALID_FONT_WEIGHTS.includes(weight)) return undefined;
   return weight;
 }
 
@@ -180,13 +181,13 @@ export function sanitizePreviewConfig(
   }
   if (
     typeof raw.fontTitleWeight === "number" &&
-    raw.fontTitleWeight >= 100 && raw.fontTitleWeight <= 900
+    VALID_FONT_WEIGHTS.includes(raw.fontTitleWeight)
   ) {
     config.fontTitleWeight = raw.fontTitleWeight;
   }
   if (
     typeof raw.fontBodyWeight === "number" &&
-    raw.fontBodyWeight >= 100 && raw.fontBodyWeight <= 900
+    VALID_FONT_WEIGHTS.includes(raw.fontBodyWeight)
   ) {
     config.fontBodyWeight = raw.fontBodyWeight;
   }
