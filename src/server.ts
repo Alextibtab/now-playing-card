@@ -58,7 +58,7 @@ async function handleGetSvg(
   const data = await fetchNowPlaying(kv, source);
   const params = new URL(req.url).searchParams;
   const config = await buildSvgConfig(params);
-  const svg = generateNowPlayingSvg(data, config);
+  const svg = await generateNowPlayingSvg(data, config);
 
   return new Response(svg, {
     status: 200,
@@ -132,21 +132,11 @@ async function handlePreviewRender(req: Request): Promise<Response> {
     const body = JSON.parse(text);
     const data = body.data as NowPlayingData | null;
     const configOverrides = sanitizePreviewConfig(body.config || {});
-    const baseConfig: SvgConfig = {
+    const config: SvgConfig = {
       ...defaultSvgConfig,
       ...configOverrides,
     };
-    const { loadFontData } = await import("./server/fonts.ts");
-    const titleFont = await loadFontData(baseConfig.fontTitleFile);
-    const bodyFont = await loadFontData(baseConfig.fontBodyFile);
-    const config: SvgConfig = {
-      ...baseConfig,
-      fontTitleDataUrl: titleFont?.dataUrl,
-      fontBodyDataUrl: bodyFont?.dataUrl,
-      fontTitleFormat: titleFont?.format,
-      fontBodyFormat: bodyFont?.format,
-    };
-    const svg = generateNowPlayingSvg(data, config);
+    const svg = await generateNowPlayingSvg(data, config);
     return new Response(svg, {
       status: 200,
       headers: {
@@ -181,7 +171,7 @@ async function handleGetEditor(): Promise<Response> {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-cache",
         "Content-Security-Policy":
-          `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; img-src data:; font-src data:; connect-src 'self'`,
+          `default-src 'none'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'; img-src data:; font-src data:; connect-src 'self'`,
         "X-Frame-Options": "DENY",
       },
     });
@@ -189,6 +179,33 @@ async function handleGetEditor(): Promise<Response> {
     return new Response(
       JSON.stringify({ error: "Editor page not found" }),
       { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
+}
+
+async function handleGetAsset(
+  filename: string,
+): Promise<Response> {
+  try {
+    const assetUrl = new URL(`../assets/${filename}`, import.meta.url);
+    const content = await Deno.readFile(assetUrl);
+    const ext = filename.split(".").pop()?.toLowerCase();
+    const contentType = ext === "css"
+      ? "text/css; charset=utf-8"
+      : ext === "js"
+      ? "application/javascript; charset=utf-8"
+      : "application/octet-stream";
+    return new Response(content, {
+      status: 200,
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
+  } catch {
+    return new Response(
+      JSON.stringify({ error: "Asset not found" }),
+      { status: 404, headers: { "Content-Type": "application/json" } },
     );
   }
 }
@@ -335,6 +352,10 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
       }
     } else if (path === "/editor" && req.method === "GET") {
       response = await handleGetEditor();
+    } else if (path === "/assets/editor.css" && req.method === "GET") {
+      response = await handleGetAsset("editor.css");
+    } else if (path === "/assets/editor.js" && req.method === "GET") {
+      response = await handleGetAsset("editor.js");
     } else if (path === "/api/preview" && req.method === "POST") {
       response = await handlePreviewRender(req);
     } else if (path === "/") {

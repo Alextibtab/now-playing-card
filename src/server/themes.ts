@@ -32,8 +32,8 @@ export function isSvgConfig(value: unknown): value is SvgConfig {
     isBoolean(config.showAlbum) &&
     isString(config.fontTitleFamily) &&
     isString(config.fontBodyFamily) &&
-    isString(config.fontTitleFile) &&
-    isString(config.fontBodyFile) &&
+    isNumber(config.fontTitleWeight) &&
+    isNumber(config.fontBodyWeight) &&
     isString(config.fontFallback) &&
     (config.visualisation === undefined ||
       VISUALISATION_TYPES.includes(

@@ -79,13 +79,11 @@ export interface SvgConfig {
   showAlbum: boolean;
   fontTitleFamily: string;
   fontBodyFamily: string;
-  fontTitleFile: string;
-  fontBodyFile: string;
+  fontTitleWeight: number;
+  fontBodyWeight: number;
   fontFallback: string;
   fontTitleDataUrl?: string;
   fontBodyDataUrl?: string;
-  fontTitleFormat?: string;
-  fontBodyFormat?: string;
   visualisation: VisualisationType;
 }
 
@@ -105,8 +103,8 @@ export const defaultSvgConfig: SvgConfig = {
   showAlbum: true,
   fontTitleFamily: "DotGothic16",
   fontBodyFamily: "Space Mono",
-  fontTitleFile: "DotGothic16-Regular.ttf",
-  fontBodyFile: "SpaceMono-Regular.ttf",
+  fontTitleWeight: 400,
+  fontBodyWeight: 400,
   fontFallback: "'Segoe UI', sans-serif",
   visualisation: "waveform",
 };
