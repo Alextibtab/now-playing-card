@@ -7,8 +7,8 @@ Deno TypeScript project for a Tauon Music Player "now playing" widget.
 **Architecture:**
 
 - `src/server.ts` - Deno Deploy API: serves SVG widget, receives data via KV
-- `src/server/storage.ts` - KV operations
-- `src/server/auth.ts` - Authentication
+- `src/server/kv_storage.ts` - KV operations
+- `src/server/authentication.ts` - Authentication
 - `src/server/fonts.ts` - Google Fonts loading/caching
 - `src/server/themes.ts` - Theme loading/validation
 - `src/server/config.ts` - Config parsing
@@ -82,7 +82,7 @@ deno cache --unstable-kv src/server.ts
 - Use JSR registry imports defined in `deno.json` imports field
 - Import format: `import { assertEquals } from "@std/assert";`
 - Use relative imports for local modules:
-  `import { generateNowPlayingSvg } from "./svg/index.ts";`
+  `import { generate_now_playing_svg } from "./svg/index.ts";`
 - Always include `.ts` extension in relative imports
 - Use npm packages when needed: `import sharp from "sharp";`
 
@@ -96,10 +96,10 @@ deno cache --unstable-kv src/server.ts
 
 ### Naming Conventions
 
-- `camelCase` for variables, functions, and methods
+- `snake_case` for variables, functions, and methods
 - `PascalCase` for classes, interfaces, types, and enums
 - `SCREAMING_SNAKE_CASE` for constants
-- `kebab-case` for file names
+- `snake_case` for file names
 
 ### Error Handling
 

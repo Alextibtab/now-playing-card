@@ -2,28 +2,28 @@ import { NowPlayingData, SourceType } from "../types.ts";
 
 const KV_KEY_PREFIX = "now-playing";
 
-function getKvKey(source: SourceType): string[] {
+function get_kv_key(source: SourceType): string[] {
   return [KV_KEY_PREFIX, source];
 }
 
-export async function storeNowPlaying(
+export async function store_now_playing(
   kv: Deno.Kv,
   source: SourceType,
   data: NowPlayingData,
 ): Promise<void> {
-  await kv.set(getKvKey(source), data);
+  await kv.set(get_kv_key(source), data);
 }
 
-export async function getNowPlaying(
+export async function get_now_playing(
   kv: Deno.Kv,
   source: SourceType,
 ): Promise<NowPlayingData | null> {
-  const result = await kv.get<NowPlayingData>(getKvKey(source));
+  const result = await kv.get<NowPlayingData>(get_kv_key(source));
   return result.value;
 }
 
 export const VALID_SOURCES = ["tauon", "spotify", "lastfm", "tidal"] as const;
 
-export function isValidSource(source: string): source is SourceType {
+export function is_valid_source(source: string): source is SourceType {
   return VALID_SOURCES.includes(source as SourceType);
 }

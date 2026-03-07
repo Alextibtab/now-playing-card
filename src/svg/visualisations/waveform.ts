@@ -1,4 +1,4 @@
-import { generateWaveformLayer } from "./waves.ts";
+import { generate_waveform_layer } from "./waves.ts";
 import type { VisualOutput, VisualParams } from "./types.ts";
 
 /**
@@ -7,48 +7,48 @@ import type { VisualOutput, VisualParams } from "./types.ts";
  * Renders 2 background layers (always visible) and a 3rd foreground
  * layer when the track is actively playing.
  */
-export function renderWaveform(params: VisualParams): VisualOutput {
+export function render_waveform(params: VisualParams): VisualOutput {
   const {
-    startX,
-    endX,
-    baseY,
+    start_x,
+    end_x,
+    base_y,
     height,
     seed,
-    isPlaying,
+    is_playing,
     highlight,
   } = params;
 
-  const bgLayer1 = generateWaveformLayer(
+  const bg_layer1 = generate_waveform_layer(
     highlight,
     0.20,
-    startX,
-    endX,
-    baseY,
+    start_x,
+    end_x,
+    base_y,
     height,
     seed * 0.03,
     30,
-    isPlaying,
+    is_playing,
   );
 
-  const bgLayer2 = generateWaveformLayer(
+  const bg_layer2 = generate_waveform_layer(
     highlight,
     0.40,
-    startX,
-    endX,
-    baseY,
+    start_x,
+    end_x,
+    base_y,
     height * 0.7,
     seed * 0.05 + 4.1,
     60,
-    isPlaying,
+    is_playing,
   );
 
-  const fgLayer = isPlaying
-    ? generateWaveformLayer(
+  const fg_layer = is_playing
+    ? generate_waveform_layer(
       highlight,
       0.60,
-      startX,
-      endX,
-      baseY,
+      start_x,
+      end_x,
+      base_y,
       height * 0.85,
       seed * 0.08 + 8.2,
       25,
@@ -57,12 +57,12 @@ export function renderWaveform(params: VisualParams): VisualOutput {
 
   const body = `
   <g fill="url(#visFade)" opacity="0.4" clip-path="url(#cardClip)">
-    ${bgLayer1}
-    ${bgLayer2}
+    ${bg_layer1}
+    ${bg_layer2}
   </g>
   ${
-    fgLayer
-      ? `<g fill="url(#visFade)" opacity="0.45" clip-path="url(#cardClip)">${fgLayer}</g>`
+    fg_layer
+      ? `<g fill="url(#visFade)" opacity="0.45" clip-path="url(#cardClip)">${fg_layer}</g>`
       : ""
   }`;
 

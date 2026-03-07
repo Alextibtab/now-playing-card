@@ -4,7 +4,7 @@
  * @param text Raw text content.
  * @returns Escaped text safe for SVG.
  */
-export function escapeXml(text: string): string {
+export function escape_xml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -17,21 +17,21 @@ export function escapeXml(text: string): string {
  * Truncate text to a fixed maximum length.
  *
  * @param text Input text.
- * @param maxLength Maximum number of characters.
+ * @param max_length Maximum number of characters.
  * @returns Truncated text with ellipsis when needed.
  */
-export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength - 3) + "...";
+export function truncate_text(text: string, max_length: number): string {
+  if (text.length <= max_length) return text;
+  return text.substring(0, max_length - 3) + "...";
 }
 
 /**
  * Estimate text width for layout calculations.
  *
  * @param text Input text.
- * @param fontSize Font size in pixels.
+ * @param font_size Font size in pixels.
  * @returns Estimated width in pixels.
  */
-export function estimateTextWidth(text: string, fontSize: number): number {
-  return text.length * (fontSize * 0.55);
+export function estimate_text_width(text: string, font_size: number): number {
+  return text.length * (font_size * 0.55);
 }

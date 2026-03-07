@@ -4,16 +4,16 @@ import type {
   VisualOutput,
   VisualParams,
 } from "./types.ts";
-import { renderWaveform } from "./waveform.ts";
-import { renderEqualizer } from "./equalizer.ts";
-import { renderOrbs } from "./orbs.ts";
-import { renderParticles } from "./particles.ts";
+import { render_waveform } from "./waveform.ts";
+import { render_equalizer } from "./equalizer.ts";
+import { render_orbs } from "./orbs.ts";
+import { render_particles } from "./particles.ts";
 
 const renderers: Record<VisualisationType, VisualisationRenderer> = {
-  waveform: renderWaveform,
-  equalizer: renderEqualizer,
-  orbs: renderOrbs,
-  particles: renderParticles,
+  waveform: render_waveform,
+  equalizer: render_equalizer,
+  orbs: render_orbs,
+  particles: render_particles,
 };
 
 /**
@@ -25,7 +25,7 @@ const renderers: Record<VisualisationType, VisualisationRenderer> = {
  * @param params Shared rendering parameters.
  * @returns SVG defs and body markup.
  */
-export function renderVisualisation(
+export function render_visualisation(
   type: VisualisationType,
   params: VisualParams,
 ): VisualOutput {

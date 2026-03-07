@@ -1,8 +1,8 @@
 import { ColorPalette, NowPlayingData } from "../types.ts";
-import { fetchAndResizeArt } from "./album-art.ts";
-import { sendToDeploy } from "./api-client.ts";
-import { shouldUpdate } from "./state.ts";
-import { fetchTauonStatus } from "./tauon-api.ts";
+import { fetch_and_resize_art } from "./album_art.ts";
+import { send_to_deploy } from "./api_client.ts";
+import { should_update } from "./state.ts";
+import { fetch_tauon_status } from "./tauon_api.ts";
 
 // Configuration from environment
 const TAUON_URL = Deno.env.get("TAUON_URL") || "http://localhost:7814";
@@ -11,12 +11,12 @@ const API_KEY = Deno.env.get("API_KEY");
 const POLL_INTERVAL_MS = parseInt(Deno.env.get("POLL_INTERVAL_MS") || "10000");
 
 // State to track last sent/seen data to avoid unnecessary updates
-let lastSentTrackId: number | null = null;
-let lastSentStatus: string | null = null;
-let lastSeenStatus: string | null = null;
-let lastAlbumName: string | null = null;
-let lastArtBase64: string | null = null;
-let lastColors: ColorPalette | null = null;
+let last_sent_track_id: number | null = null;
+let last_sent_status: string | null = null;
+let last_seen_status: string | null = null;
+let last_album_name: string | null = null;
+let last_art_base64: string | null = null;
+let last_colors: ColorPalette | null = null;
 
 if (!DEPLOY_URL) {
   console.error("DEPLOY_URL environment variable is required");
@@ -28,11 +28,11 @@ if (!API_KEY) {
   Deno.exit(1);
 }
 
-const deployUrl = DEPLOY_URL!;
-const apiKey = API_KEY!;
+const deploy_url = DEPLOY_URL!;
+const api_key = API_KEY!;
 
 async function poll(): Promise<void> {
-  const status = await fetchTauonStatus(TAUON_URL);
+  const status = await fetch_tauon_status(TAUON_URL);
 
   if (!status) {
     console.log("Tauon unreachable, skipping update");
@@ -40,58 +40,68 @@ async function poll(): Promise<void> {
   }
 
   if (status.status !== "playing" && status.status !== "paused") {
-    lastSeenStatus = status.status;
+    last_seen_status = status.status;
     return;
   }
 
-  if (!shouldUpdate(status, lastSentTrackId, lastSentStatus, lastSeenStatus)) {
-    lastSeenStatus = status.status;
+  if (
+    !should_update(
+      status,
+      last_sent_track_id,
+      last_sent_status,
+      last_seen_status,
+    )
+  ) {
+    last_seen_status = status.status;
     return;
   }
 
-  let artBase64: string | null = null;
+  let art_base64: string | null = null;
   let colors: ColorPalette | null = null;
-  const albumName = (status.track?.album || status.album || "").trim();
-  const isPlayableStatus = status.status === "playing" ||
+  const album_name = (status.track?.album || status.album || "").trim();
+  const is_playable_status = status.status === "playing" ||
     status.status === "paused";
-  const hasCachedArt = albumName.length > 0 && albumName === lastAlbumName &&
-    lastArtBase64 && lastColors;
+  const has_cached_art = album_name.length > 0 &&
+    album_name === last_album_name &&
+    last_art_base64 && last_colors;
 
-  if (isPlayableStatus && status.id > 0) {
-    if (hasCachedArt) {
-      artBase64 = lastArtBase64;
-      colors = lastColors;
+  if (is_playable_status && status.id > 0) {
+    if (has_cached_art) {
+      art_base64 = last_art_base64;
+      colors = last_colors;
     } else {
-      const artResult = await fetchAndResizeArt(TAUON_URL, status.id);
-      if (artResult) {
-        artBase64 = artResult.base64;
-        colors = artResult.colors;
-        if (albumName.length > 0) {
-          lastAlbumName = albumName;
-          lastArtBase64 = artBase64;
-          lastColors = colors;
+      const art_result = await fetch_and_resize_art(TAUON_URL, status.id);
+      if (art_result) {
+        art_base64 = art_result.base64;
+        colors = art_result.colors;
+        if (album_name.length > 0) {
+          last_album_name = album_name;
+          last_art_base64 = art_base64;
+          last_colors = colors;
         }
       }
     }
   }
 
-  const nowPlayingData: NowPlayingData = {
+  const now_playing_data: NowPlayingData = {
     title: status.title || status.track?.title || "Unknown Title",
     artist: status.artist || status.track?.artist || "Unknown Artist",
     album: status.album || status.track?.album || "Unknown Album",
     status: status.status === "playing" ? "playing" : "last-played",
-    artBase64,
+    art_base64,
     colors,
-    updatedAt: Date.now(),
+    updated_at: Date.now(),
   };
 
-  const success = await sendToDeploy(deployUrl, apiKey, nowPlayingData);
+  const success = await send_to_deploy(deploy_url, api_key, now_playing_data);
 
   if (success) {
-    lastSentTrackId = status.id;
-    lastSentStatus = status.status;
-    lastSeenStatus = status.status;
-    console.log(`Updated: ${nowPlayingData.title} by ${nowPlayingData.artist}`);
+    last_sent_track_id = status.id;
+    last_sent_status = status.status;
+    last_seen_status = status.status;
+    console.log(
+      `Updated: ${now_playing_data.title} by ${now_playing_data.artist}`,
+    );
   }
 }
 

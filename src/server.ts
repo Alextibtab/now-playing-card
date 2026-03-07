@@ -1,5 +1,5 @@
 import {
-  defaultSvgConfig,
+  default_svg_config,
   NowPlayingData,
   SourceType,
   SvgConfig,
@@ -7,25 +7,25 @@ import {
 } from "./types.ts";
 import { encodeBase64 } from "@std/encoding";
 import { load } from "@std/dotenv";
-import { generateNowPlayingSvg } from "./svg/index.ts";
-import { validateAuth } from "./server/authentication.ts";
-import { getNowPlaying, storeNowPlaying } from "./server/kv-storage.ts";
-import { buildSvgConfig, sanitizePreviewConfig } from "./server/config.ts";
-import { fetchLastFm } from "./sources/lastfm/index.ts";
+import { generate_now_playing_svg } from "./svg/index.ts";
+import { validate_auth } from "./server/authentication.ts";
+import { get_now_playing, store_now_playing } from "./server/kv_storage.ts";
+import { build_svg_config, sanitize_preview_config } from "./server/config.ts";
+import { fetch_lastfm } from "./sources/lastfm/index.ts";
 
-const editorCache: { template: string | null } = { template: null };
+const editor_cache: { template: string | null } = { template: null };
 
-function generateNonce(): string {
+function generate_nonce(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
   return encodeBase64(bytes);
 }
 
-async function handlePostTauonNowPlaying(
+async function handle_post_tauon_now_playing(
   req: Request,
   kv: Deno.Kv,
 ): Promise<Response> {
-  if (!validateAuth(req)) {
+  if (!validate_auth(req)) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
@@ -36,7 +36,7 @@ async function handlePostTauonNowPlaying(
     const text = await req.text();
     console.log(`Received POST [tauon]: ${text.length} chars`);
     const data = JSON.parse(text) as NowPlayingData;
-    await storeNowPlaying(kv, "tauon", data);
+    await store_now_playing(kv, "tauon", data);
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -50,15 +50,15 @@ async function handlePostTauonNowPlaying(
   }
 }
 
-async function handleGetSvg(
+async function handle_get_svg(
   req: Request,
   kv: Deno.Kv,
   source: SourceType,
 ): Promise<Response> {
-  const data = await fetchNowPlaying(kv, source);
+  const data = await fetch_now_playing(kv, source);
   const params = new URL(req.url).searchParams;
-  const config = await buildSvgConfig(params);
-  const svg = await generateNowPlayingSvg(data, config);
+  const config = await build_svg_config(params);
+  const svg = await generate_now_playing_svg(data, config);
 
   return new Response(svg, {
     status: 200,
@@ -69,35 +69,35 @@ async function handleGetSvg(
   });
 }
 
-async function fetchNowPlaying(
+async function fetch_now_playing(
   kv: Deno.Kv,
   source: SourceType,
 ): Promise<NowPlayingData | null> {
   if (source === "tauon") {
-    return await getNowPlaying(kv, source);
+    return await get_now_playing(kv, source);
   }
 
   if (source === "lastfm") {
-    const apiKey = Deno.env.get("LASTFM_API_KEY");
+    const api_key = Deno.env.get("LASTFM_API_KEY");
     const username = Deno.env.get("LASTFM_USERNAME");
 
-    if (!apiKey || !username) {
+    if (!api_key || !username) {
       console.warn("LastFM credentials not configured");
       return null;
     }
 
-    return fetchLastFm(apiKey, username);
+    return fetch_lastfm(api_key, username);
   }
 
   console.warn(`Source "${source}" not implemented`);
   return null;
 }
 
-async function handleGetNowPlaying(
+async function handle_get_now_playing(
   kv: Deno.Kv,
   source: SourceType,
 ): Promise<Response> {
-  const data = await fetchNowPlaying(kv, source);
+  const data = await fetch_now_playing(kv, source);
   return new Response(JSON.stringify(data), {
     status: 200,
     headers: {
@@ -109,11 +109,11 @@ async function handleGetNowPlaying(
 
 const MAX_PREVIEW_BODY = 8 * 1024 * 1024;
 
-async function handlePreviewRender(req: Request): Promise<Response> {
-  const contentLength = parseInt(
+async function handle_preview_render(req: Request): Promise<Response> {
+  const content_length = parseInt(
     req.headers.get("Content-Length") || "0",
   );
-  if (contentLength > MAX_PREVIEW_BODY) {
+  if (content_length > MAX_PREVIEW_BODY) {
     return new Response(
       JSON.stringify({ error: "Request body too large" }),
       { status: 413, headers: { "Content-Type": "application/json" } },
@@ -131,12 +131,12 @@ async function handlePreviewRender(req: Request): Promise<Response> {
 
     const body = JSON.parse(text);
     const data = body.data as NowPlayingData | null;
-    const configOverrides = sanitizePreviewConfig(body.config || {});
+    const config_overrides = sanitize_preview_config(body.config || {});
     const config: SvgConfig = {
-      ...defaultSvgConfig,
-      ...configOverrides,
+      ...default_svg_config,
+      ...config_overrides,
     };
-    const svg = await generateNowPlayingSvg(data, config);
+    const svg = await generate_now_playing_svg(data, config);
     return new Response(svg, {
       status: 200,
       headers: {
@@ -152,19 +152,19 @@ async function handlePreviewRender(req: Request): Promise<Response> {
   }
 }
 
-async function handleGetEditor(): Promise<Response> {
+async function handle_get_editor(): Promise<Response> {
   try {
-    if (!editorCache.template) {
-      const editorUrl = new URL("../assets/editor.html", import.meta.url);
-      let html = await Deno.readTextFile(editorUrl);
-      const artUrl = new URL("../assets/sample-art.jpg", import.meta.url);
-      const artData = await Deno.readFile(artUrl);
-      const artBase64 = encodeBase64(artData);
-      html = html.replace("{{SAMPLE_ART_BASE64}}", artBase64);
-      editorCache.template = html;
+    if (!editor_cache.template) {
+      const editor_url = new URL("../assets/editor.html", import.meta.url);
+      let html = await Deno.readTextFile(editor_url);
+      const art_url = new URL("../assets/sample-art.jpg", import.meta.url);
+      const art_data = await Deno.readFile(art_url);
+      const art_base64 = encodeBase64(art_data);
+      html = html.replace("{{SAMPLE_ART_BASE64}}", art_base64);
+      editor_cache.template = html;
     }
-    const nonce = generateNonce();
-    const html = editorCache.template.replaceAll("{{CSP_NONCE}}", nonce);
+    const nonce = generate_nonce();
+    const html = editor_cache.template.replaceAll("{{CSP_NONCE}}", nonce);
     return new Response(html, {
       status: 200,
       headers: {
@@ -183,14 +183,14 @@ async function handleGetEditor(): Promise<Response> {
   }
 }
 
-async function handleGetAsset(
+async function handle_get_asset(
   filename: string,
 ): Promise<Response> {
   try {
-    const assetUrl = new URL(`../assets/${filename}`, import.meta.url);
-    const content = await Deno.readFile(assetUrl);
+    const asset_url = new URL(`../assets/${filename}`, import.meta.url);
+    const content = await Deno.readFile(asset_url);
     const ext = filename.split(".").pop()?.toLowerCase();
-    const contentType = ext === "css"
+    const content_type = ext === "css"
       ? "text/css; charset=utf-8"
       : ext === "js"
       ? "application/javascript; charset=utf-8"
@@ -198,7 +198,7 @@ async function handleGetAsset(
     return new Response(content, {
       status: 200,
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": content_type,
         "Cache-Control": "public, max-age=3600",
       },
     });
@@ -210,23 +210,23 @@ async function handleGetAsset(
   }
 }
 
-function handleGetPreview(req: Request, source: SourceType): Response {
+function handle_get_preview(req: Request, source: SourceType): Response {
   const params = new URL(req.url).searchParams;
-  const nonce = generateNonce();
+  const nonce = generate_nonce();
 
-  const extraParams = new URLSearchParams(params);
-  extraParams.delete("vis");
-  const extraStr = extraParams.toString();
-  const suffix = extraStr ? `&${extraStr}` : "";
+  const extra_params = new URLSearchParams(params);
+  extra_params.delete("vis");
+  const extra_str = extra_params.toString();
+  const suffix = extra_str ? `&${extra_str}` : "";
 
-  const svgPath = `/${source}/now-playing.svg`;
+  const svg_path = `/${source}/now-playing.svg`;
 
   const widgets = VISUALISATION_TYPES.map(
     (vis) =>
       `<div class="widget-section">
         <h2>${vis}</h2>
         <div class="widget">
-          <img src="${svgPath}?vis=${vis}${suffix}" alt="${vis} visualisation" />
+          <img src="${svg_path}?vis=${vis}${suffix}" alt="${vis} visualisation" />
         </div>
       </div>`,
   );
@@ -285,7 +285,7 @@ function handleGetPreview(req: Request, source: SourceType): Response {
   });
 }
 
-function parseSourceFromPath(
+function parse_source_from_path(
   path: string,
 ): { source: SourceType; remaining: string } | null {
   const match = path.match(/^\/(tauon|spotify|lastfm|tidal)(\/.*)?$/);
@@ -295,40 +295,40 @@ function parseSourceFromPath(
   return null;
 }
 
-async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
+async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname;
 
-  const corsHeaders = {
+  const cors_headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Authorization, Content-Type",
   };
 
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response(null, { status: 204, headers: cors_headers });
   }
 
   try {
     let response: Response;
 
-    const parsed = parseSourceFromPath(path);
+    const parsed = parse_source_from_path(path);
 
     if (parsed) {
       const { source, remaining } = parsed;
 
       if (remaining === "/now-playing.svg" && req.method === "GET") {
-        response = await handleGetSvg(req, kv, source);
+        response = await handle_get_svg(req, kv, source);
       } else if (remaining === "/preview" && req.method === "GET") {
-        response = handleGetPreview(req, source);
+        response = handle_get_preview(req, source);
       } else if (
         remaining === "/api/now-playing" &&
         req.method === "POST" &&
         source === "tauon"
       ) {
-        response = await handlePostTauonNowPlaying(req, kv);
+        response = await handle_post_tauon_now_playing(req, kv);
       } else if (remaining === "/api/now-playing" && req.method === "GET") {
-        response = await handleGetNowPlaying(kv, source);
+        response = await handle_get_now_playing(kv, source);
       } else if (remaining === "/") {
         response = new Response(
           JSON.stringify({
@@ -351,13 +351,13 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
         });
       }
     } else if (path === "/editor" && req.method === "GET") {
-      response = await handleGetEditor();
+      response = await handle_get_editor();
     } else if (path === "/assets/editor.css" && req.method === "GET") {
-      response = await handleGetAsset("editor.css");
+      response = await handle_get_asset("editor.css");
     } else if (path === "/assets/editor.js" && req.method === "GET") {
-      response = await handleGetAsset("editor.js");
+      response = await handle_get_asset("editor.js");
     } else if (path === "/api/preview" && req.method === "POST") {
-      response = await handlePreviewRender(req);
+      response = await handle_preview_render(req);
     } else if (path === "/") {
       response = new Response(
         JSON.stringify({
@@ -395,19 +395,19 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
       });
     }
 
-    const newHeaders = new Headers(response.headers);
-    for (const [key, value] of Object.entries(corsHeaders)) {
-      newHeaders.set(key, value);
+    const new_headers = new Headers(response.headers);
+    for (const [key, value] of Object.entries(cors_headers)) {
+      new_headers.set(key, value);
     }
 
-    newHeaders.set("X-Content-Type-Options", "nosniff");
+    new_headers.set("X-Content-Type-Options", "nosniff");
 
-    const contentType = response.headers.get("Content-Type") || "";
+    const content_type = response.headers.get("Content-Type") || "";
     if (
-      contentType.includes("image/svg+xml") &&
+      content_type.includes("image/svg+xml") &&
       !response.headers.has("Content-Security-Policy")
     ) {
-      newHeaders.set(
+      new_headers.set(
         "Content-Security-Policy",
         "default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data:",
       );
@@ -416,7 +416,7 @@ async function handleRequest(req: Request, kv: Deno.Kv): Promise<Response> {
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers: newHeaders,
+      headers: new_headers,
     });
   } catch (error) {
     console.error("Request error:", error);
@@ -435,7 +435,7 @@ async function main(): Promise<void> {
 
   const port = parseInt(Deno.env.get("PORT") || "8000");
 
-  Deno.serve({ port }, (req) => handleRequest(req, kv));
+  Deno.serve({ port }, (req) => handle_request(req, kv));
   console.log(`Server running on port ${port}`);
 }
 

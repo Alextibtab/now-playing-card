@@ -2,47 +2,47 @@ import { encodeBase64 } from "@std/encoding";
 
 const FONT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_CACHE_SIZE = 50;
-const fontCache = new Map<string, {
-  dataUrl: string;
-  cssBlock: string;
+const font_cache = new Map<string, {
+  data_url: string;
+  css_block: string;
   timestamp: number;
 }>();
 
 const FALLBACK_WEIGHTS = [400, 700, 300, 500, 600, 200, 100, 800, 900];
 
-function cleanupCache(): void {
+function cleanup_cache(): void {
   const now = Date.now();
 
-  for (const [key, entry] of fontCache.entries()) {
+  for (const [key, entry] of font_cache.entries()) {
     if (now - entry.timestamp > FONT_CACHE_TTL_MS) {
-      fontCache.delete(key);
+      font_cache.delete(key);
     }
   }
 
-  if (fontCache.size <= MAX_CACHE_SIZE) {
+  if (font_cache.size <= MAX_CACHE_SIZE) {
     return;
   }
 
-  const entries = Array.from(fontCache.entries());
+  const entries = Array.from(font_cache.entries());
   entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
 
-  const entriesToRemove = entries.slice(0, fontCache.size - MAX_CACHE_SIZE);
-  for (const [key] of entriesToRemove) {
-    fontCache.delete(key);
+  const entries_to_remove = entries.slice(0, font_cache.size - MAX_CACHE_SIZE);
+  for (const [key] of entries_to_remove) {
+    font_cache.delete(key);
   }
 }
 
-function buildGoogleFontsUrl(
-  fontFamily: string,
+function build_google_fonts_url(
+  font_family: string,
   weight: number,
   text: string,
 ): string {
-  const family = fontFamily.replace(/\s+/g, "+");
-  const textParam = encodeURIComponent(text);
-  return `https://fonts.googleapis.com/css2?family=${family}:wght@${weight}&text=${textParam}&display=swap`;
+  const family = font_family.replace(/\s+/g, "+");
+  const text_param = encodeURIComponent(text);
+  return `https://fonts.googleapis.com/css2?family=${family}:wght@${weight}&text=${text_param}&display=swap`;
 }
 
-async function fetchGoogleFontCss(url: string): Promise<string | null> {
+async function fetch_google_font_css(url: string): Promise<string | null> {
   try {
     const response = await fetch(url, {
       headers: {
@@ -66,12 +66,12 @@ async function fetchGoogleFontCss(url: string): Promise<string | null> {
   }
 }
 
-function extractFontUrlFromCss(css: string): string | null {
-  const urlMatch = css.match(/url\((https:\/\/fonts\.gstatic\.com[^)]+)\)/);
-  return urlMatch ? urlMatch[1] : null;
+function extract_font_url_from_css(css: string): string | null {
+  const url_match = css.match(/url\((https:\/\/fonts\.gstatic\.com[^)]+)\)/);
+  return url_match ? url_match[1] : null;
 }
 
-async function fetchFontFile(url: string): Promise<Uint8Array | null> {
+async function fetch_font_file(url: string): Promise<Uint8Array | null> {
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -85,94 +85,100 @@ async function fetchFontFile(url: string): Promise<Uint8Array | null> {
   }
 }
 
-function buildFontFaceCss(
-  fontFamily: string,
+function build_font_face_css(
+  font_family: string,
   weight: number,
-  dataUrl: string,
+  data_url: string,
 ): string {
   return `@font-face {
-  font-family: '${fontFamily}';
-  src: url(${dataUrl}) format('woff2');
+  font-family: '${font_family}';
+  src: url(${data_url}) format('woff2');
   font-weight: ${weight};
   font-style: normal;
   font-display: swap;
 }`;
 }
 
-async function tryLoadFontWithWeight(
-  fontFamily: string,
+async function try_load_font_with_weight(
+  font_family: string,
   weight: number,
-  uniqueChars: string,
-): Promise<{ dataUrl: string; cssBlock: string; weight: number } | null> {
-  const googleFontsUrl = buildGoogleFontsUrl(fontFamily, weight, uniqueChars);
-  const css = await fetchGoogleFontCss(googleFontsUrl);
+  unique_chars: string,
+): Promise<{ data_url: string; css_block: string; weight: number } | null> {
+  const google_fonts_url = build_google_fonts_url(
+    font_family,
+    weight,
+    unique_chars,
+  );
+  const css = await fetch_google_font_css(google_fonts_url);
   if (!css) {
     return null;
   }
 
-  const fontUrl = extractFontUrlFromCss(css);
-  if (!fontUrl) {
+  const font_url = extract_font_url_from_css(css);
+  if (!font_url) {
     return null;
   }
 
-  const fontData = await fetchFontFile(fontUrl);
-  if (!fontData) {
+  const font_data = await fetch_font_file(font_url);
+  if (!font_data) {
     return null;
   }
 
-  const base64 = encodeBase64(fontData);
-  const dataUrl = `data:font/woff2;base64,${base64}`;
-  const cssBlock = buildFontFaceCss(fontFamily, weight, dataUrl);
+  const base64 = encodeBase64(font_data);
+  const data_url = `data:font/woff2;base64,${base64}`;
+  const css_block = build_font_face_css(font_family, weight, data_url);
 
-  return { dataUrl, cssBlock, weight };
+  return { data_url, css_block, weight };
 }
 
-export async function loadGoogleFont(
-  fontFamily: string,
+export async function load_google_font(
+  font_family: string,
   weight: number,
   text: string,
-): Promise<{ dataUrl: string; cssBlock: string; actualWeight: number } | null> {
-  if (!fontFamily || !text) {
+): Promise<
+  { data_url: string; css_block: string; actual_weight: number } | null
+> {
+  if (!font_family || !text) {
     return null;
   }
 
-  const uniqueChars = [...new Set(text)].sort().join("");
-  const cacheKey = `${fontFamily}:${weight}:${uniqueChars}`;
+  const unique_chars = [...new Set(text)].sort().join("");
+  const cache_key = `${font_family}:${weight}:${unique_chars}`;
 
-  const cached = fontCache.get(cacheKey);
+  const cached = font_cache.get(cache_key);
   if (cached && Date.now() - cached.timestamp < FONT_CACHE_TTL_MS) {
-    return { ...cached, actualWeight: weight };
+    return { ...cached, actual_weight: weight };
   }
 
-  const weightsToTry = [
+  const weights_to_try = [
     weight,
     ...FALLBACK_WEIGHTS.filter((w) => w !== weight),
   ];
 
-  for (const tryWeight of weightsToTry) {
-    const result = await tryLoadFontWithWeight(
-      fontFamily,
-      tryWeight,
-      uniqueChars,
+  for (const try_weight of weights_to_try) {
+    const result = await try_load_font_with_weight(
+      font_family,
+      try_weight,
+      unique_chars,
     );
     if (result) {
-      if (tryWeight !== weight) {
+      if (try_weight !== weight) {
         console.warn(
-          `Font "${fontFamily}" weight ${weight} not available, using weight ${tryWeight} instead`,
+          `Font "${font_family}" weight ${weight} not available, using weight ${try_weight} instead`,
         );
       }
-      const cacheResult = {
-        dataUrl: result.dataUrl,
-        cssBlock: result.cssBlock,
+      const cache_result = {
+        data_url: result.data_url,
+        css_block: result.css_block,
       };
-      cleanupCache();
-      fontCache.set(cacheKey, { ...cacheResult, timestamp: Date.now() });
-      return { ...cacheResult, actualWeight: tryWeight };
+      cleanup_cache();
+      font_cache.set(cache_key, { ...cache_result, timestamp: Date.now() });
+      return { ...cache_result, actual_weight: try_weight };
     }
   }
 
   console.warn(
-    `Failed to load font "${fontFamily}" - no available weights found`,
+    `Failed to load font "${font_family}" - no available weights found`,
   );
   return null;
 }
