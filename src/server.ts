@@ -192,34 +192,13 @@ async function handle_get_asset(
 ): Promise<Response> {
   try {
     const asset_url = new URL(`../assets/${filename}`, import.meta.url);
-    let content = await Deno.readFile(asset_url);
+    const content = await Deno.readFile(asset_url);
     const ext = filename.split(".").pop()?.toLowerCase();
     const content_type = ext === "css"
       ? "text/css; charset=utf-8"
       : ext === "js"
       ? "application/javascript; charset=utf-8"
       : "application/octet-stream";
-
-    if (filename === "editor.js") {
-      const nonce = generate_nonce();
-      const art_url = new URL("../assets/sample-art.jpg", import.meta.url);
-      const art_data = await Deno.readFile(art_url);
-      const art_base64 = encodeBase64(art_data);
-      let js_content = new TextDecoder().decode(content);
-      js_content = js_content.replace("{{CSP_NONCE}}", nonce);
-      js_content = js_content.replace("{{SAMPLE_ART_BASE64}}", art_base64);
-      content = new TextEncoder().encode(js_content);
-
-      return new Response(content, {
-        status: 200,
-        headers: {
-          "Content-Type": content_type,
-          "Cache-Control": "no-cache",
-          "Content-Security-Policy":
-            `default-src 'none'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'; img-src data:; font-src data:; connect-src 'self'`,
-        },
-      });
-    }
 
     return new Response(content, {
       status: 200,
@@ -382,6 +361,8 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
       response = await handle_get_asset("editor.css");
     } else if (path === "/assets/editor.js" && req.method === "GET") {
       response = await handle_get_asset("editor.js");
+    } else if (path === "/assets/sample-art.jpg" && req.method === "GET") {
+      response = await handle_get_asset("sample-art.jpg");
     } else if (path === "/api/preview" && req.method === "POST") {
       response = await handle_preview_render(req);
     } else if (path === "/") {

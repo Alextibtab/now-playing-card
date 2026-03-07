@@ -1,5 +1,26 @@
-const CSP_NONCE = "{{CSP_NONCE}}";
-const SAMPLE_ART = "{{SAMPLE_ART_BASE64}}";
+const CSP_NONCE = document.currentScript?.nonce || "";
+const SAMPLE_ART_URL = "/assets/sample-art.jpg";
+
+let sample_art_base64 = null;
+
+async function fetch_sample_art() {
+  if (sample_art_base64) return sample_art_base64;
+  try {
+    const response = await fetch(SAMPLE_ART_URL);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result.split(",")[1];
+        sample_art_base64 = base64;
+        resolve(base64);
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
 
 const DEFAULT_THEME = {
   width: 800,
@@ -466,7 +487,7 @@ export_btn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-reset_btn.addEventListener("click", () => {
+reset_btn.addEventListener("click", async () => {
   syncing = true;
   status_select.value = "playing";
   vis_select.value = "waveform";
@@ -490,7 +511,7 @@ reset_btn.addEventListener("click", () => {
   );
   syncing = false;
   set_editor_value(theme_editor, { ...DEFAULT_THEME });
-  const art_value = SAMPLE_ART.startsWith("{{") ? null : SAMPLE_ART;
+  const art_value = await fetch_sample_art();
   set_editor_value(data_editor, {
     ...DEFAULT_DATA,
     artBase64: art_value,
@@ -499,8 +520,8 @@ reset_btn.addEventListener("click", () => {
   schedule_render();
 });
 
-function init() {
-  const art_value = SAMPLE_ART.startsWith("{{") ? null : SAMPLE_ART;
+async function init() {
+  const art_value = await fetch_sample_art();
   set_editor_value(theme_editor, { ...DEFAULT_THEME });
   set_editor_value(data_editor, {
     ...DEFAULT_DATA,
