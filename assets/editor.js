@@ -49,13 +49,13 @@ const DEFAULT_DATA = {
   artist: "HOME",
   album: "Odyssey",
   status: "playing",
-  artBase64: null,
+  art_base64: null,
   colors: {
     dominant: "#2a1f3d",
     accent: "#332550",
     highlight: "#e67ab2",
   },
-  updatedAt: Date.now(),
+  updated_at: Date.now(),
 };
 
 const card_bg_row = document.getElementById("cardBgRow");
@@ -307,10 +307,10 @@ function apply_status_mode(data) {
   const mode = status_select.value;
   if (mode === "playing") {
     data.status = "playing";
-    data.updatedAt = Date.now();
+    data.updated_at = Date.now();
   } else if (mode === "last-played") {
     data.status = "last-played";
-    data.updatedAt = Date.now();
+    data.updated_at = Date.now();
   }
   return data;
 }
@@ -465,7 +465,7 @@ art_file_input.addEventListener("change", (e) => {
     const base64 = reader.result.split(",")[1];
     const data = get_data_from_editor();
     if (data) {
-      data.artBase64 = base64;
+      data.art_base64 = base64;
       set_editor_value(data_editor, data);
       schedule_render();
     }
@@ -514,8 +514,8 @@ reset_btn.addEventListener("click", async () => {
   const art_value = await fetch_sample_art();
   set_editor_value(data_editor, {
     ...DEFAULT_DATA,
-    artBase64: art_value,
-    updatedAt: Date.now(),
+    art_base64: art_value,
+    updated_at: Date.now(),
   });
   schedule_render();
 });
@@ -525,8 +525,8 @@ async function init() {
   set_editor_value(theme_editor, { ...DEFAULT_THEME });
   set_editor_value(data_editor, {
     ...DEFAULT_DATA,
-    artBase64: art_value,
-    updatedAt: Date.now(),
+    art_base64: art_value,
+    updated_at: Date.now(),
   });
   sync_controls_from_theme(DEFAULT_THEME);
   render_preview();
