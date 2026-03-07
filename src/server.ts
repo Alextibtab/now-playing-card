@@ -136,7 +136,16 @@ async function handle_preview_render(req: Request): Promise<Response> {
       ...default_svg_config,
       ...config_overrides,
     };
-    const svg = await generate_now_playing_svg(data, config);
+    let svg = await generate_now_playing_svg(data, config);
+
+    const nonce = body.nonce as string | undefined;
+    if (nonce) {
+      svg = svg.replace(
+        /<style>/g,
+        `<style nonce="${nonce}">`,
+      );
+    }
+
     return new Response(svg, {
       status: 200,
       headers: {

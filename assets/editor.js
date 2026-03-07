@@ -316,7 +316,11 @@ async function render_preview() {
     const res = await fetch("/api/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: send_data, config: theme }),
+      body: JSON.stringify({
+        data: send_data,
+        config: theme,
+        nonce: CSP_NONCE,
+      }),
     });
 
     if (!res.ok) {
@@ -330,9 +334,6 @@ async function render_preview() {
     if (!sanitized) {
       set_status("error", "Invalid SVG response");
       return;
-    }
-    for (const s of sanitized.querySelectorAll("style")) {
-      s.nonce = CSP_NONCE;
     }
     svg_preview.replaceChildren(sanitized);
     set_status("ok", "Rendered");
