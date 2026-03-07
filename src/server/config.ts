@@ -4,13 +4,15 @@ import {
   VISUALISATION_TYPES,
   VisualisationType,
 } from "../types.ts";
+import {
+  FONT_FALLBACK_PATTERN,
+  FONT_FAMILY_PATTERN,
+  HEX_COLOR_PATTERN,
+  MAX_FONT_FAMILY_LENGTH,
+  THEME_NAME_PATTERN,
+  VALID_FONT_WEIGHTS,
+} from "./constants.ts";
 import { load_theme } from "./themes.ts";
-
-const FONT_FAMILY_PATTERN = /^[a-z0-9 _-]+$/i;
-const FONT_FALLBACK_PATTERN = /^[a-z0-9 _,'-]+$/i;
-const THEME_NAME_PATTERN = /^[a-z0-9_-]+$/i;
-const VALID_FONT_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-const MAX_FONT_FAMILY_LENGTH = 100;
 
 export function parse_boolean_param(value: string | null): boolean | undefined {
   if (!value) return undefined;
@@ -96,8 +98,6 @@ export async function build_svg_config(
   };
   return base_config;
 }
-
-const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));

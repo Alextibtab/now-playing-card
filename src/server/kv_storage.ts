@@ -21,9 +21,3 @@ export async function get_now_playing(
   const result = await kv.get<NowPlayingData>(get_kv_key(source));
   return result.value;
 }
-
-export const VALID_SOURCES = ["tauon", "spotify", "lastfm", "tidal"] as const;
-
-export function is_valid_source(source: string): source is SourceType {
-  return VALID_SOURCES.includes(source as SourceType);
-}

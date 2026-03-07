@@ -1,8 +1,9 @@
 import { SvgConfig, VISUALISATION_TYPES, VisualisationType } from "../types.ts";
-
-const THEME_NAME_PATTERN = /^[a-z0-9_-]+$/i;
-const VALID_FONT_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-const MAX_FONT_FAMILY_LENGTH = 100;
+import {
+  MAX_FONT_FAMILY_LENGTH,
+  THEME_NAME_PATTERN,
+  VALID_FONT_WEIGHTS,
+} from "./constants.ts";
 const theme_cache = new Map<string, SvgConfig>();
 
 export function is_svg_config(value: unknown): value is SvgConfig {

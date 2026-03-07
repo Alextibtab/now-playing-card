@@ -30,3 +30,9 @@ export interface VisualOutput {
 export type VisualisationRenderer = (
   params: VisualParams,
 ) => VisualOutput;
+
+/** Deterministic pseudo-random number from index and seed. */
+export function seeded_random(index: number, seed: number): number {
+  const value = Math.sin(index * 12.9898 + seed) * 43758.5453;
+  return value - Math.floor(value);
+}

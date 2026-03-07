@@ -110,10 +110,3 @@ export const default_svg_config: SvgConfig = {
 };
 
 export type SourceType = "tauon" | "spotify" | "lastfm" | "tidal";
-
-export const SOURCE_TYPES: readonly SourceType[] = [
-  "tauon",
-  "spotify",
-  "lastfm",
-  "tidal",
-];
