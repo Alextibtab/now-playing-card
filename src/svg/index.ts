@@ -10,11 +10,12 @@ import {
   computePlaybackState,
   computeTextConfig,
 } from "./config.ts";
+import { loadGoogleFont } from "../server/fonts.ts";
 
-export function generateNowPlayingSvg(
+export async function generateNowPlayingSvg(
   data: NowPlayingData | null,
   config: SvgConfig = defaultSvgConfig,
-): string {
+): Promise<string> {
   const playback = computePlaybackState(data);
   const colors = computeColors(data, config, mixColors);
   const layout = computeLayout(
@@ -30,7 +31,20 @@ export function generateNowPlayingSvg(
     }
     return hash;
   });
-  const fonts = computeFontConfig(config);
+
+  const allText = [
+    data?.title || "",
+    data?.artist || "",
+    data?.album || "",
+    playback.statusLabel,
+  ].join("");
+
+  const [titleFont, bodyFont] = await Promise.all([
+    loadGoogleFont(config.fontTitleFamily, config.fontTitleWeight, allText),
+    loadGoogleFont(config.fontBodyFamily, config.fontBodyWeight, allText),
+  ]);
+
+  const fonts = computeFontConfig(config, titleFont, bodyFont);
 
   const { width, height, albumSize } = config;
   const {

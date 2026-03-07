@@ -9,7 +9,7 @@ Deno TypeScript project for a Tauon Music Player "now playing" widget.
 - `src/server.ts` - Deno Deploy API: serves SVG widget, receives data via KV
 - `src/server/storage.ts` - KV operations
 - `src/server/auth.ts` - Authentication
-- `src/server/fonts.ts` - Font loading/caching
+- `src/server/fonts.ts` - Google Fonts loading/caching
 - `src/server/themes.ts` - Theme loading/validation
 - `src/server/config.ts` - Config parsing
 - `src/poller/index.ts` - Local poller: polls Tauon API, resizes album art,

@@ -5,12 +5,12 @@ import {
   VisualisationType,
 } from "../types.ts";
 import { loadTheme } from "./themes.ts";
-import { loadFontData } from "./fonts.ts";
 
-const FONT_FILE_PATTERN = /^[a-z0-9._-]+$/i;
 const FONT_FAMILY_PATTERN = /^[a-z0-9 _-]+$/i;
 const FONT_FALLBACK_PATTERN = /^[a-z0-9 _,'-]+$/i;
 const THEME_NAME_PATTERN = /^[a-z0-9_-]+$/i;
+const VALID_FONT_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+const MAX_FONT_FAMILY_LENGTH = 100;
 
 export function parseBooleanParam(value: string | null): boolean | undefined {
   if (!value) return undefined;
@@ -31,23 +31,24 @@ export function parseTextAlign(
   return undefined;
 }
 
-export function inferFontFamily(fileName: string): string {
-  const base = fileName.replace(/\.[^.]+$/, "");
-  return base.replace(/[_-]+/g, " ").trim() || base;
-}
-
-export function parseFontFile(value: string | null): string | undefined {
-  if (!value) return undefined;
-  const normalized = value.trim();
-  if (!normalized || !FONT_FILE_PATTERN.test(normalized)) return undefined;
-  return normalized;
-}
-
 export function parseFontFamily(value: string | null): string | undefined {
   if (!value) return undefined;
   const normalized = value.trim();
-  if (!normalized || !FONT_FAMILY_PATTERN.test(normalized)) return undefined;
+  if (
+    !normalized ||
+    normalized.length > MAX_FONT_FAMILY_LENGTH ||
+    !FONT_FAMILY_PATTERN.test(normalized)
+  ) {
+    return undefined;
+  }
   return normalized;
+}
+
+export function parseFontWeight(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const weight = parseInt(value, 10);
+  if (isNaN(weight) || !VALID_FONT_WEIGHTS.includes(weight)) return undefined;
+  return weight;
 }
 
 export async function buildSvgConfig(
@@ -74,14 +75,10 @@ export async function buildSvgConfig(
       VISUALISATION_TYPES.includes(visParam as VisualisationType)
     ? visParam as VisualisationType
     : undefined;
-  const fontTitleFile = parseFontFile(params.get("fontTitle"));
-  const fontBodyFile = parseFontFile(params.get("fontBody"));
-  const fontTitleFamilyParam = parseFontFamily(params.get("fontTitleFamily"));
-  const fontBodyFamilyParam = parseFontFamily(params.get("fontBodyFamily"));
-  const fontTitleFamily = fontTitleFamilyParam ||
-    (fontTitleFile ? inferFontFamily(fontTitleFile) : undefined);
-  const fontBodyFamily = fontBodyFamilyParam ||
-    (fontBodyFile ? inferFontFamily(fontBodyFile) : undefined);
+  const fontTitleFamily = parseFontFamily(params.get("fontTitleFamily"));
+  const fontBodyFamily = parseFontFamily(params.get("fontBodyFamily"));
+  const fontTitleWeight = parseFontWeight(params.get("fontTitleWeight"));
+  const fontBodyWeight = parseFontWeight(params.get("fontBodyWeight"));
   const baseConfig: SvgConfig = {
     ...defaultSvgConfig,
     ...(theme || {}),
@@ -92,20 +89,12 @@ export async function buildSvgConfig(
     ...(showArtist !== undefined ? { showArtist } : {}),
     ...(showAlbum !== undefined ? { showAlbum } : {}),
     ...(visualisation ? { visualisation } : {}),
-    ...(fontTitleFile ? { fontTitleFile } : {}),
-    ...(fontBodyFile ? { fontBodyFile } : {}),
     ...(fontTitleFamily ? { fontTitleFamily } : {}),
     ...(fontBodyFamily ? { fontBodyFamily } : {}),
+    ...(fontTitleWeight !== undefined ? { fontTitleWeight } : {}),
+    ...(fontBodyWeight !== undefined ? { fontBodyWeight } : {}),
   };
-  const titleFont = await loadFontData(baseConfig.fontTitleFile);
-  const bodyFont = await loadFontData(baseConfig.fontBodyFile);
-  return {
-    ...baseConfig,
-    fontTitleDataUrl: titleFont?.dataUrl,
-    fontBodyDataUrl: bodyFont?.dataUrl,
-    fontTitleFormat: titleFont?.format,
-    fontBodyFormat: bodyFont?.format,
-  };
+  return baseConfig;
 }
 
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
@@ -186,24 +175,30 @@ export function sanitizePreviewConfig(
   }
 
   if (
-    typeof raw.fontTitleFile === "string" &&
-    FONT_FILE_PATTERN.test(raw.fontTitleFile)
+    typeof raw.fontTitleFamily === "string" &&
+    raw.fontTitleFamily.length <= MAX_FONT_FAMILY_LENGTH &&
+    FONT_FAMILY_PATTERN.test(raw.fontTitleFamily)
   ) {
-    config.fontTitleFile = raw.fontTitleFile;
-    config.fontTitleFamily = typeof raw.fontTitleFamily === "string" &&
-        FONT_FAMILY_PATTERN.test(raw.fontTitleFamily)
-      ? raw.fontTitleFamily
-      : inferFontFamily(raw.fontTitleFile);
+    config.fontTitleFamily = raw.fontTitleFamily;
   }
   if (
-    typeof raw.fontBodyFile === "string" &&
-    FONT_FILE_PATTERN.test(raw.fontBodyFile)
+    typeof raw.fontBodyFamily === "string" &&
+    raw.fontBodyFamily.length <= MAX_FONT_FAMILY_LENGTH &&
+    FONT_FAMILY_PATTERN.test(raw.fontBodyFamily)
   ) {
-    config.fontBodyFile = raw.fontBodyFile;
-    config.fontBodyFamily = typeof raw.fontBodyFamily === "string" &&
-        FONT_FAMILY_PATTERN.test(raw.fontBodyFamily)
-      ? raw.fontBodyFamily
-      : inferFontFamily(raw.fontBodyFile);
+    config.fontBodyFamily = raw.fontBodyFamily;
+  }
+  if (
+    typeof raw.fontTitleWeight === "number" &&
+    VALID_FONT_WEIGHTS.includes(raw.fontTitleWeight)
+  ) {
+    config.fontTitleWeight = raw.fontTitleWeight;
+  }
+  if (
+    typeof raw.fontBodyWeight === "number" &&
+    VALID_FONT_WEIGHTS.includes(raw.fontBodyWeight)
+  ) {
+    config.fontBodyWeight = raw.fontBodyWeight;
   }
   if (
     typeof raw.fontFallback === "string" &&

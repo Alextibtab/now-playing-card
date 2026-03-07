@@ -226,11 +226,11 @@ export function computeFontConfig(
     fontTitleFamily?: string;
     fontBodyFamily?: string;
     fontFallback: string;
-    fontTitleDataUrl?: string;
-    fontBodyDataUrl?: string;
-    fontTitleFormat?: string;
-    fontBodyFormat?: string;
+    fontTitleWeight: number;
+    fontBodyWeight: number;
   },
+  titleFont: { cssBlock: string } | null,
+  bodyFont: { cssBlock: string } | null,
 ): FontConfig {
   const fontFallback = escapeXml(config.fontFallback || "sans-serif");
   const fontTitleFamily = config.fontTitleFamily
@@ -241,28 +241,8 @@ export function computeFontConfig(
     : fontFallback;
 
   const fontFaces = [
-    config.fontTitleDataUrl && config.fontTitleFamily
-      ? `@font-face {
-  font-family: '${escapeXml(config.fontTitleFamily)}';
-  src: url(${escapeXml(config.fontTitleDataUrl)}) format('${
-        escapeXml(config.fontTitleFormat || "truetype")
-      }');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}`
-      : "",
-    config.fontBodyDataUrl && config.fontBodyFamily
-      ? `@font-face {
-  font-family: '${escapeXml(config.fontBodyFamily)}';
-  src: url(${escapeXml(config.fontBodyDataUrl)}) format('${
-        escapeXml(config.fontBodyFormat || "truetype")
-      }');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}`
-      : "",
+    titleFont?.cssBlock || "",
+    bodyFont?.cssBlock || "",
   ].filter(Boolean).join("\n");
   const styleBlock = fontFaces ? `<style>${fontFaces}</style>` : "";
 
