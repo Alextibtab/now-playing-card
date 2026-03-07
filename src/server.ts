@@ -156,12 +156,7 @@ async function handle_get_editor(): Promise<Response> {
   try {
     if (!editor_cache.template) {
       const editor_url = new URL("../assets/editor.html", import.meta.url);
-      let html = await Deno.readTextFile(editor_url);
-      const art_url = new URL("../assets/sample-art.jpg", import.meta.url);
-      const art_data = await Deno.readFile(art_url);
-      const art_base64 = encodeBase64(art_data);
-      html = html.replace("{{SAMPLE_ART_BASE64}}", art_base64);
-      editor_cache.template = html;
+      editor_cache.template = await Deno.readTextFile(editor_url);
     }
     const nonce = generate_nonce();
     const html = editor_cache.template.replaceAll("{{CSP_NONCE}}", nonce);
@@ -188,13 +183,35 @@ async function handle_get_asset(
 ): Promise<Response> {
   try {
     const asset_url = new URL(`../assets/${filename}`, import.meta.url);
-    const content = await Deno.readFile(asset_url);
+    let content = await Deno.readFile(asset_url);
     const ext = filename.split(".").pop()?.toLowerCase();
     const content_type = ext === "css"
       ? "text/css; charset=utf-8"
       : ext === "js"
       ? "application/javascript; charset=utf-8"
       : "application/octet-stream";
+
+    if (filename === "editor.js") {
+      const nonce = generate_nonce();
+      const art_url = new URL("../assets/sample-art.jpg", import.meta.url);
+      const art_data = await Deno.readFile(art_url);
+      const art_base64 = encodeBase64(art_data);
+      let js_content = new TextDecoder().decode(content);
+      js_content = js_content.replace("{{CSP_NONCE}}", nonce);
+      js_content = js_content.replace("{{SAMPLE_ART_BASE64}}", art_base64);
+      content = new TextEncoder().encode(js_content);
+
+      return new Response(content, {
+        status: 200,
+        headers: {
+          "Content-Type": content_type,
+          "Cache-Control": "no-cache",
+          "Content-Security-Policy":
+            `default-src 'none'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'; img-src data:; font-src data:; connect-src 'self'`,
+        },
+      });
+    }
+
     return new Response(content, {
       status: 200,
       headers: {
