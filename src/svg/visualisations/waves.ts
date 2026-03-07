@@ -1,7 +1,4 @@
-function seeded_random(index: number, seed: number): number {
-  const value = Math.sin(index * 12.9898 + seed) * 43758.5453;
-  return value - Math.floor(value);
-}
+import { seeded_random } from "./types.ts";
 
 /**
  * Produce a stable numeric seed from a string.

@@ -3,6 +3,7 @@ import { mix_colors } from "./colors.ts";
 import { generate_music_note_placeholder } from "./icons.ts";
 import { escape_xml, truncate_text } from "./text.ts";
 import { render_visualisation } from "./visualisations/index.ts";
+import { hash_string } from "./visualisations/waves.ts";
 import {
   compute_colors,
   compute_font_config,
@@ -24,13 +25,7 @@ export async function generate_now_playing_svg(
     config.album_size,
     config,
   );
-  const text = compute_text_config(data, layout, (s: string) => {
-    let hash = 0;
-    for (let i = 0; i < s.length; i++) {
-      hash = ((hash << 5) - hash + s.charCodeAt(i)) | 0;
-    }
-    return hash;
-  });
+  const text = compute_text_config(data, layout, hash_string);
 
   const all_text = [
     data?.title || "",

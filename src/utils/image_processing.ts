@@ -12,9 +12,13 @@ export interface ProcessedArt {
   colors: ColorPalette;
 }
 
+function to_hex(v: number, brighten = false): string {
+  const val = brighten ? Math.min(255, Math.round(v + (255 - v) * 0.1)) : v;
+  return val.toString(16).padStart(2, "0");
+}
+
 function color_to_hex(color: number): string {
   const [r, g, b] = Image.colorToRGBA(color);
-  const to_hex = (v: number) => v.toString(16).padStart(2, "0");
   return `#${to_hex(r)}${to_hex(g)}${to_hex(b)}`;
 }
 
@@ -22,7 +26,6 @@ function calculate_accent(hex: string): string {
   const r = Math.min(255, Math.round(parseInt(hex.slice(1, 3), 16) * 1.2));
   const g = Math.min(255, Math.round(parseInt(hex.slice(3, 5), 16) * 1.2));
   const b = Math.min(255, Math.round(parseInt(hex.slice(5, 7), 16) * 1.2));
-  const to_hex = (v: number) => v.toString(16).padStart(2, "0");
   return `#${to_hex(r)}${to_hex(g)}${to_hex(b)}`;
 }
 
@@ -51,12 +54,9 @@ function extract_highlight(image: Image, dominant_hex: string): string {
     if (score > best.score) best = { r, g, b, score };
   }
 
-  const to_hex = (v: number) =>
-    Math.min(255, Math.round(v + (255 - v) * 0.1)).toString(16).padStart(
-      2,
-      "0",
-    );
-  return `#${to_hex(best.r)}${to_hex(best.g)}${to_hex(best.b)}`;
+  return `#${to_hex(best.r, true)}${to_hex(best.g, true)}${
+    to_hex(best.b, true)
+  }`;
 }
 
 function extract_fallback_highlight(image: Image): string {
@@ -70,7 +70,6 @@ function extract_fallback_highlight(image: Image): string {
     if (b > max_b) max_b = b;
   }
 
-  const to_hex = (v: number) => v.toString(16).padStart(2, "0");
   return `#${to_hex(max_r)}${to_hex(max_g)}${to_hex(max_b)}`;
 }
 
@@ -86,14 +85,9 @@ export function extract_colors(image: Image): ColorPalette {
     return { dominant, accent, highlight: highlight_candidate };
   }
 
-  const to_hex = (v: number) =>
-    Math.min(255, Math.round(v + (255 - v) * 0.1)).toString(16).padStart(
-      2,
-      "0",
-    );
-  const blended = `#${to_hex(parseInt(fallback.slice(1, 3), 16))}${
-    to_hex(parseInt(fallback.slice(3, 5), 16))
-  }${to_hex(parseInt(fallback.slice(5, 7), 16))}`;
+  const blended = `#${to_hex(parseInt(fallback.slice(1, 3), 16), true)}${
+    to_hex(parseInt(fallback.slice(3, 5), 16), true)
+  }${to_hex(parseInt(fallback.slice(5, 7), 16), true)}`;
 
   return { dominant, accent, highlight: blended };
 }

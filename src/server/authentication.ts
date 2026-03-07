@@ -11,7 +11,3 @@ export function validate_auth(req: Request): boolean {
 
   return parts[1] === API_KEY;
 }
-
-export function get_api_key(): string | undefined {
-  return API_KEY;
-}

@@ -1,9 +1,5 @@
 import type { VisualOutput, VisualParams } from "./types.ts";
-
-function seeded_random(index: number, seed: number): number {
-  const value = Math.sin(index * 12.9898 + seed) * 43758.5453;
-  return value - Math.floor(value);
-}
+import { seeded_random } from "./types.ts";
 
 /**
  * Floating particles — small circles that drift upward at varying
