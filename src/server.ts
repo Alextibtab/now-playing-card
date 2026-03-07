@@ -136,7 +136,16 @@ async function handle_preview_render(req: Request): Promise<Response> {
       ...default_svg_config,
       ...config_overrides,
     };
-    const svg = await generate_now_playing_svg(data, config);
+    let svg = await generate_now_playing_svg(data, config);
+
+    const nonce = body.nonce as string | undefined;
+    if (nonce) {
+      svg = svg.replace(
+        /<style>/g,
+        `<style nonce="${nonce}">`,
+      );
+    }
+
     return new Response(svg, {
       status: 200,
       headers: {
@@ -156,12 +165,7 @@ async function handle_get_editor(): Promise<Response> {
   try {
     if (!editor_cache.template) {
       const editor_url = new URL("../assets/editor.html", import.meta.url);
-      let html = await Deno.readTextFile(editor_url);
-      const art_url = new URL("../assets/sample-art.jpg", import.meta.url);
-      const art_data = await Deno.readFile(art_url);
-      const art_base64 = encodeBase64(art_data);
-      html = html.replace("{{SAMPLE_ART_BASE64}}", art_base64);
-      editor_cache.template = html;
+      editor_cache.template = await Deno.readTextFile(editor_url);
     }
     const nonce = generate_nonce();
     const html = editor_cache.template.replaceAll("{{CSP_NONCE}}", nonce);
@@ -195,6 +199,7 @@ async function handle_get_asset(
       : ext === "js"
       ? "application/javascript; charset=utf-8"
       : "application/octet-stream";
+
     return new Response(content, {
       status: 200,
       headers: {
@@ -356,6 +361,8 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
       response = await handle_get_asset("editor.css");
     } else if (path === "/assets/editor.js" && req.method === "GET") {
       response = await handle_get_asset("editor.js");
+    } else if (path === "/assets/sample-art.jpg" && req.method === "GET") {
+      response = await handle_get_asset("sample-art.jpg");
     } else if (path === "/api/preview" && req.method === "POST") {
       response = await handle_preview_render(req);
     } else if (path === "/") {

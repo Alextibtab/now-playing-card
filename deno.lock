@@ -34,11 +34,6 @@
       "jsr:@std/assert@1",
       "jsr:@std/dotenv@0.225",
       "jsr:@std/encoding@1"
-    ],
-    "packageJson": {
-      "dependencies": [
-        "npm:tailwindcss@^3.4.0"
-      ]
-    }
+    ]
   }
 }
