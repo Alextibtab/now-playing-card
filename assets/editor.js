@@ -68,7 +68,7 @@ const tab_data = document.getElementById("tabData");
 
 let debounce_timer = null;
 let syncing = false;
-let active_tab = "theme";
+let _active_tab = "theme";
 
 const DANGEROUS_ELEMENTS = new Set([
   "script",
@@ -89,6 +89,7 @@ const URI_ATTRS = new Set([
 ]);
 
 function normalize_uri(val) {
+  // deno-lint-ignore no-control-regex
   return val.replace(/[\s\x00-\x1f]+/g, "").toLowerCase();
 }
 
@@ -152,7 +153,7 @@ function sanitize_svg(raw) {
 }
 
 function switch_tab(tab) {
-  active_tab = tab;
+  _active_tab = tab;
   tab_theme.classList.toggle("active", tab === "theme");
   tab_data.classList.toggle("active", tab === "data");
   theme_editor.classList.toggle("hidden", tab !== "theme");
@@ -192,7 +193,7 @@ function set_color_active(row, input, value_el, clear_btn, hex) {
   clear_btn.classList.remove("hidden");
 }
 
-function set_color_inactive(row, input, value_el, clear_btn) {
+function set_color_inactive(row, _input, value_el, clear_btn) {
   row.classList.add("inactive");
   value_el.textContent = "auto";
   clear_btn.classList.add("hidden");
