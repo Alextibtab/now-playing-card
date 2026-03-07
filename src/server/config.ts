@@ -1,10 +1,10 @@
 import {
-  defaultSvgConfig,
+  default_svg_config,
   SvgConfig,
   VISUALISATION_TYPES,
   VisualisationType,
 } from "../types.ts";
-import { loadTheme } from "./themes.ts";
+import { load_theme } from "./themes.ts";
 
 const FONT_FAMILY_PATTERN = /^[a-z0-9 _-]+$/i;
 const FONT_FALLBACK_PATTERN = /^[a-z0-9 _,'-]+$/i;
@@ -12,7 +12,7 @@ const THEME_NAME_PATTERN = /^[a-z0-9_-]+$/i;
 const VALID_FONT_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 const MAX_FONT_FAMILY_LENGTH = 100;
 
-export function parseBooleanParam(value: string | null): boolean | undefined {
+export function parse_boolean_param(value: string | null): boolean | undefined {
   if (!value) return undefined;
   const normalized = value.trim().toLowerCase();
   if (normalized === "1" || normalized === "true") return true;
@@ -20,7 +20,7 @@ export function parseBooleanParam(value: string | null): boolean | undefined {
   return undefined;
 }
 
-export function parseTextAlign(
+export function parse_text_align(
   value: string | null,
 ): "left" | "center" | "right" | undefined {
   if (!value) return undefined;
@@ -31,7 +31,7 @@ export function parseTextAlign(
   return undefined;
 }
 
-export function parseFontFamily(value: string | null): string | undefined {
+export function parse_font_family(value: string | null): string | undefined {
   if (!value) return undefined;
   const normalized = value.trim();
   if (
@@ -44,57 +44,57 @@ export function parseFontFamily(value: string | null): string | undefined {
   return normalized;
 }
 
-export function parseFontWeight(value: string | null): number | undefined {
+export function parse_font_weight(value: string | null): number | undefined {
   if (!value) return undefined;
   const weight = parseInt(value, 10);
   if (isNaN(weight) || !VALID_FONT_WEIGHTS.includes(weight)) return undefined;
   return weight;
 }
 
-export async function buildSvgConfig(
+export async function build_svg_config(
   params: URLSearchParams,
 ): Promise<SvgConfig> {
-  const themeParam = params.get("theme") || "default";
-  const themeName = THEME_NAME_PATTERN.test(themeParam)
-    ? themeParam
+  const theme_param = params.get("theme") || "default";
+  const theme_name = THEME_NAME_PATTERN.test(theme_param)
+    ? theme_param
     : "default";
-  const theme = await loadTheme(themeName);
+  const theme = await load_theme(theme_name);
   const position = params.get("position");
-  const albumPosition = position === "right"
+  const album_position = position === "right"
     ? "right"
     : position === "left"
     ? "left"
     : undefined;
-  const textAlign = parseTextAlign(params.get("align"));
-  const showStatus = parseBooleanParam(params.get("showStatus"));
-  const showTitle = parseBooleanParam(params.get("showTitle"));
-  const showArtist = parseBooleanParam(params.get("showArtist"));
-  const showAlbum = parseBooleanParam(params.get("showAlbum"));
-  const visParam = params.get("vis");
-  const visualisation = visParam &&
-      VISUALISATION_TYPES.includes(visParam as VisualisationType)
-    ? visParam as VisualisationType
+  const text_align = parse_text_align(params.get("align"));
+  const show_status = parse_boolean_param(params.get("showStatus"));
+  const show_title = parse_boolean_param(params.get("showTitle"));
+  const show_artist = parse_boolean_param(params.get("showArtist"));
+  const show_album = parse_boolean_param(params.get("showAlbum"));
+  const vis_param = params.get("vis");
+  const visualisation = vis_param &&
+      VISUALISATION_TYPES.includes(vis_param as VisualisationType)
+    ? vis_param as VisualisationType
     : undefined;
-  const fontTitleFamily = parseFontFamily(params.get("fontTitleFamily"));
-  const fontBodyFamily = parseFontFamily(params.get("fontBodyFamily"));
-  const fontTitleWeight = parseFontWeight(params.get("fontTitleWeight"));
-  const fontBodyWeight = parseFontWeight(params.get("fontBodyWeight"));
-  const baseConfig: SvgConfig = {
-    ...defaultSvgConfig,
+  const font_title_family = parse_font_family(params.get("fontTitleFamily"));
+  const font_body_family = parse_font_family(params.get("fontBodyFamily"));
+  const font_title_weight = parse_font_weight(params.get("fontTitleWeight"));
+  const font_body_weight = parse_font_weight(params.get("fontBodyWeight"));
+  const base_config: SvgConfig = {
+    ...default_svg_config,
     ...(theme || {}),
-    ...(albumPosition ? { albumPosition } : {}),
-    ...(textAlign ? { textAlign } : {}),
-    ...(showStatus !== undefined ? { showStatus } : {}),
-    ...(showTitle !== undefined ? { showTitle } : {}),
-    ...(showArtist !== undefined ? { showArtist } : {}),
-    ...(showAlbum !== undefined ? { showAlbum } : {}),
+    ...(album_position ? { album_position } : {}),
+    ...(text_align ? { text_align } : {}),
+    ...(show_status !== undefined ? { show_status } : {}),
+    ...(show_title !== undefined ? { show_title } : {}),
+    ...(show_artist !== undefined ? { show_artist } : {}),
+    ...(show_album !== undefined ? { show_album } : {}),
     ...(visualisation ? { visualisation } : {}),
-    ...(fontTitleFamily ? { fontTitleFamily } : {}),
-    ...(fontBodyFamily ? { fontBodyFamily } : {}),
-    ...(fontTitleWeight !== undefined ? { fontTitleWeight } : {}),
-    ...(fontBodyWeight !== undefined ? { fontBodyWeight } : {}),
+    ...(font_title_family ? { font_title_family } : {}),
+    ...(font_body_family ? { font_body_family } : {}),
+    ...(font_title_weight !== undefined ? { font_title_weight } : {}),
+    ...(font_body_weight !== undefined ? { font_body_weight } : {}),
   };
-  return baseConfig;
+  return base_config;
 }
 
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
@@ -103,7 +103,7 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-export function sanitizePreviewConfig(
+export function sanitize_preview_config(
   raw: Record<string, unknown>,
 ): Partial<SvgConfig> {
   const config: Partial<SvgConfig> = {};
@@ -115,43 +115,45 @@ export function sanitizePreviewConfig(
     config.height = clamp(Math.round(raw.height), 80, 600);
   }
   if (typeof raw.albumSize === "number" && Number.isFinite(raw.albumSize)) {
-    config.albumSize = clamp(Math.round(raw.albumSize), 40, 400);
+    config.album_size = clamp(Math.round(raw.albumSize), 40, 400);
   }
   if (
     typeof raw.borderRadius === "number" && Number.isFinite(raw.borderRadius)
   ) {
-    config.borderRadius = clamp(Math.round(raw.borderRadius), 0, 64);
+    config.border_radius = clamp(Math.round(raw.borderRadius), 0, 64);
   }
 
   if (
     typeof raw.cardBackground === "string" &&
     HEX_COLOR_PATTERN.test(raw.cardBackground)
   ) {
-    config.cardBackground = raw.cardBackground;
+    config.card_background = raw.cardBackground;
   }
   if (
     typeof raw.cardBorder === "string" &&
     HEX_COLOR_PATTERN.test(raw.cardBorder)
   ) {
-    config.cardBorder = raw.cardBorder;
+    config.card_border = raw.cardBorder;
   }
   for (
     const key of ["textPrimary", "textSecondary", "textMuted"] as const
   ) {
     const val = raw[key];
     if (typeof val === "string" && HEX_COLOR_PATTERN.test(val)) {
-      config[key] = val;
+      if (key === "textPrimary") config.text_primary = val;
+      else if (key === "textSecondary") config.text_secondary = val;
+      else if (key === "textMuted") config.text_muted = val;
     }
   }
 
   if (raw.albumPosition === "left" || raw.albumPosition === "right") {
-    config.albumPosition = raw.albumPosition;
+    config.album_position = raw.albumPosition;
   }
   if (
     raw.textAlign === "left" || raw.textAlign === "center" ||
     raw.textAlign === "right"
   ) {
-    config.textAlign = raw.textAlign;
+    config.text_align = raw.textAlign;
   }
 
   for (
@@ -163,7 +165,10 @@ export function sanitizePreviewConfig(
     ] as const
   ) {
     if (typeof raw[key] === "boolean") {
-      config[key] = raw[key] as boolean;
+      if (key === "showStatus") config.show_status = raw[key] as boolean;
+      else if (key === "showTitle") config.show_title = raw[key] as boolean;
+      else if (key === "showArtist") config.show_artist = raw[key] as boolean;
+      else if (key === "showAlbum") config.show_album = raw[key] as boolean;
     }
   }
 
@@ -179,33 +184,33 @@ export function sanitizePreviewConfig(
     raw.fontTitleFamily.length <= MAX_FONT_FAMILY_LENGTH &&
     FONT_FAMILY_PATTERN.test(raw.fontTitleFamily)
   ) {
-    config.fontTitleFamily = raw.fontTitleFamily;
+    config.font_title_family = raw.fontTitleFamily;
   }
   if (
     typeof raw.fontBodyFamily === "string" &&
     raw.fontBodyFamily.length <= MAX_FONT_FAMILY_LENGTH &&
     FONT_FAMILY_PATTERN.test(raw.fontBodyFamily)
   ) {
-    config.fontBodyFamily = raw.fontBodyFamily;
+    config.font_body_family = raw.fontBodyFamily;
   }
   if (
     typeof raw.fontTitleWeight === "number" &&
     VALID_FONT_WEIGHTS.includes(raw.fontTitleWeight)
   ) {
-    config.fontTitleWeight = raw.fontTitleWeight;
+    config.font_title_weight = raw.fontTitleWeight;
   }
   if (
     typeof raw.fontBodyWeight === "number" &&
     VALID_FONT_WEIGHTS.includes(raw.fontBodyWeight)
   ) {
-    config.fontBodyWeight = raw.fontBodyWeight;
+    config.font_body_weight = raw.fontBodyWeight;
   }
   if (
     typeof raw.fontFallback === "string" &&
     raw.fontFallback.length > 0 && raw.fontFallback.length <= 100 &&
     FONT_FALLBACK_PATTERN.test(raw.fontFallback)
   ) {
-    config.fontFallback = raw.fontFallback;
+    config.font_fallback = raw.fontFallback;
   }
 
   return config;

@@ -2,7 +2,7 @@
   "tasks": {
     "dev": "deno run --watch --allow-net --allow-env --allow-read --unstable-kv src/server.ts",
     "poll": "deno run --allow-net --allow-env --allow-read src/poller/index.ts",
-    "check": "deno check src/server.ts src/poller/index.ts src/sources/lastfm/index.ts src/utils/image-processing.ts",
+    "check": "deno check src/server.ts src/poller/index.ts src/sources/lastfm/index.ts src/utils/image_processing.ts",
     "fmt": "deno fmt"
   },
   "imports": {

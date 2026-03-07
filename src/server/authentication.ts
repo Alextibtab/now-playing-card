@@ -1,6 +1,6 @@
 const API_KEY = Deno.env.get("API_KEY");
 
-export function validateAuth(req: Request): boolean {
+export function validate_auth(req: Request): boolean {
   if (!API_KEY) return false;
 
   const auth = req.headers.get("Authorization");
@@ -12,6 +12,6 @@ export function validateAuth(req: Request): boolean {
   return parts[1] === API_KEY;
 }
 
-export function getApiKey(): string | undefined {
+export function get_api_key(): string | undefined {
   return API_KEY;
 }

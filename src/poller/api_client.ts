@@ -3,14 +3,14 @@ import { NowPlayingData } from "../types.ts";
 /**
  * Send the latest now playing data to the Deploy API.
  *
- * @param deployUrl Deploy endpoint base URL.
- * @param apiKey Shared API key for authorization.
+ * @param deploy_url Deploy endpoint base URL.
+ * @param api_key Shared API key for authorization.
  * @param data Payload to store.
  * @returns True when the request succeeds.
  */
-export async function sendToDeploy(
-  deployUrl: string,
-  apiKey: string,
+export async function send_to_deploy(
+  deploy_url: string,
+  api_key: string,
   data: NowPlayingData,
 ): Promise<boolean> {
   try {
@@ -21,10 +21,10 @@ export async function sendToDeploy(
       }KB)`,
     );
 
-    const response = await fetch(`${deployUrl}/tauon/api/now-playing`, {
+    const response = await fetch(`${deploy_url}/tauon/api/now-playing`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${api_key}`,
         "Content-Type": "application/json",
       },
       body,
@@ -32,8 +32,8 @@ export async function sendToDeploy(
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.warn(`Deploy API error: ${response.status} - ${errorBody}`);
+      const error_body = await response.text();
+      console.warn(`Deploy API error: ${response.status} - ${error_body}`);
       return false;
     }
 

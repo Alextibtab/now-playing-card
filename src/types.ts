@@ -33,9 +33,9 @@ export interface TauonStatus {
 }
 
 export interface ColorPalette {
-  dominant: string; // Hex color
-  accent: string; // Hex color for equalizer/border
-  highlight: string; // Bright highlight color
+  dominant: string;
+  accent: string;
+  highlight: string;
 }
 
 export interface NowPlayingData {
@@ -43,9 +43,9 @@ export interface NowPlayingData {
   artist: string;
   album: string;
   status: "playing" | "last-played";
-  artBase64: string | null;
+  art_base64: string | null;
   colors: ColorPalette | null;
-  updatedAt: number;
+  updated_at: number;
 }
 
 export type VisualisationType =
@@ -64,48 +64,48 @@ export const VISUALISATION_TYPES: readonly VisualisationType[] = [
 export interface SvgConfig {
   width: number;
   height: number;
-  cardBackground?: string;
-  cardBorder?: string;
-  textPrimary: string;
-  textSecondary: string;
-  textMuted: string;
-  albumSize: number;
-  borderRadius: number;
-  albumPosition: "left" | "right";
-  textAlign: "left" | "center" | "right";
-  showStatus: boolean;
-  showTitle: boolean;
-  showArtist: boolean;
-  showAlbum: boolean;
-  fontTitleFamily: string;
-  fontBodyFamily: string;
-  fontTitleWeight: number;
-  fontBodyWeight: number;
-  fontFallback: string;
-  fontTitleDataUrl?: string;
-  fontBodyDataUrl?: string;
+  card_background?: string;
+  card_border?: string;
+  text_primary: string;
+  text_secondary: string;
+  text_muted: string;
+  album_size: number;
+  border_radius: number;
+  album_position: "left" | "right";
+  text_align: "left" | "center" | "right";
+  show_status: boolean;
+  show_title: boolean;
+  show_artist: boolean;
+  show_album: boolean;
+  font_title_family: string;
+  font_body_family: string;
+  font_title_weight: number;
+  font_body_weight: number;
+  font_fallback: string;
+  font_title_data_url?: string;
+  font_body_data_url?: string;
   visualisation: VisualisationType;
 }
 
-export const defaultSvgConfig: SvgConfig = {
+export const default_svg_config: SvgConfig = {
   width: 800,
   height: 200,
-  textPrimary: "#fafafa",
-  textSecondary: "#cbd5e1",
-  textMuted: "#94a3b8",
-  albumSize: 150,
-  borderRadius: 16,
-  albumPosition: "left",
-  textAlign: "left",
-  showStatus: true,
-  showTitle: true,
-  showArtist: true,
-  showAlbum: true,
-  fontTitleFamily: "DotGothic16",
-  fontBodyFamily: "Space Mono",
-  fontTitleWeight: 400,
-  fontBodyWeight: 400,
-  fontFallback: "'Segoe UI', sans-serif",
+  text_primary: "#fafafa",
+  text_secondary: "#cbd5e1",
+  text_muted: "#94a3b8",
+  album_size: 150,
+  border_radius: 16,
+  album_position: "left",
+  text_align: "left",
+  show_status: true,
+  show_title: true,
+  show_artist: true,
+  show_album: true,
+  font_title_family: "DotGothic16",
+  font_body_family: "Space Mono",
+  font_title_weight: 400,
+  font_body_weight: 400,
+  font_fallback: "'Segoe UI', sans-serif",
   visualisation: "waveform",
 };
 

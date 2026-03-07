@@ -1,6 +1,6 @@
 import type { VisualOutput, VisualParams } from "./types.ts";
 
-function seededRandom(index: number, seed: number): number {
+function seeded_random(index: number, seed: number): number {
   const value = Math.sin(index * 12.9898 + seed) * 43758.5453;
   return value - Math.floor(value);
 }
@@ -9,45 +9,45 @@ function seededRandom(index: number, seed: number): number {
  * Classic equalizer bars — vertical rectangles animating at
  * staggered heights and durations.
  */
-export function renderEqualizer(params: VisualParams): VisualOutput {
+export function render_equalizer(params: VisualParams): VisualOutput {
   const {
-    startX,
-    endX,
-    baseY,
+    start_x,
+    end_x,
+    base_y,
     height,
     seed,
-    isPlaying,
+    is_playing,
   } = params;
 
-  const barCount = 20;
+  const bar_count = 20;
   const gap = 4;
-  const totalWidth = endX - startX;
-  const barWidth = (totalWidth - gap * (barCount - 1)) / barCount;
-  const minHeight = height * 0.08;
-  const maxHeight = height * 0.85;
+  const total_width = end_x - start_x;
+  const bar_width = (total_width - gap * (bar_count - 1)) / bar_count;
+  const min_height = height * 0.08;
+  const max_height = height * 0.85;
 
   const bars: string[] = [];
 
-  for (let i = 0; i < barCount; i++) {
-    const rand = seededRandom(i, seed);
-    const rand2 = seededRandom(i + 50, seed);
-    const rand3 = seededRandom(i + 100, seed);
+  for (let i = 0; i < bar_count; i++) {
+    const rand = seeded_random(i, seed);
+    const rand2 = seeded_random(i + 50, seed);
+    const rand3 = seeded_random(i + 100, seed);
 
-    const x = startX + i * (barWidth + gap);
-    const h1 = minHeight + rand * (maxHeight - minHeight);
-    const h2 = minHeight + rand2 * (maxHeight - minHeight) * 0.6;
-    const h3 = minHeight + rand3 * (maxHeight - minHeight) * 0.8;
+    const x = start_x + i * (bar_width + gap);
+    const h1 = min_height + rand * (max_height - min_height);
+    const h2 = min_height + rand2 * (max_height - min_height) * 0.6;
+    const h3 = min_height + rand3 * (max_height - min_height) * 0.8;
 
-    const y1 = baseY - h1;
-    const y2 = baseY - h2;
-    const y3 = baseY - h3;
+    const y1 = base_y - h1;
+    const y2 = base_y - h2;
+    const y3 = base_y - h3;
 
     // Duration varies per bar for organic feel
     const duration = 2.5 + rand * 3.5;
 
-    if (isPlaying) {
+    if (is_playing) {
       bars.push(
-        `<rect x="${x}" width="${barWidth}" rx="2"
+        `<rect x="${x}" width="${bar_width}" rx="2"
           y="${y1}" height="${h1}">
           <animate attributeName="y"
             values="${y1};${y2};${y3};${y1}"
@@ -61,10 +61,10 @@ export function renderEqualizer(params: VisualParams): VisualOutput {
       );
     } else {
       // Paused: static bars at moderate height
-      const staticH = minHeight + rand * (maxHeight * 0.35 - minHeight);
-      const staticY = baseY - staticH;
+      const static_h = min_height + rand * (max_height * 0.35 - min_height);
+      const static_y = base_y - static_h;
       bars.push(
-        `<rect x="${x}" y="${staticY}" width="${barWidth}" height="${staticH}" rx="2" />`,
+        `<rect x="${x}" y="${static_y}" width="${bar_width}" height="${static_h}" rx="2" />`,
       );
     }
   }

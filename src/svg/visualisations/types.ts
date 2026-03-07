@@ -1,17 +1,17 @@
 /** Parameters shared across all visualisation renderers. */
 export interface VisualParams {
   /** Left edge X coordinate. */
-  startX: number;
+  start_x: number;
   /** Right edge X coordinate. */
-  endX: number;
+  end_x: number;
   /** Baseline Y position (bottom of the visual area). */
-  baseY: number;
+  base_y: number;
   /** Maximum height the visualisation can occupy. */
   height: number;
   /** Deterministic seed derived from the track title. */
   seed: number;
   /** Whether the track is actively playing. */
-  isPlaying: boolean;
+  is_playing: boolean;
   /** Bright highlight color. */
   highlight: string;
   /** Accent color. */
