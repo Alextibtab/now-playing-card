@@ -10,6 +10,7 @@ const FONT_FAMILY_PATTERN = /^[a-z0-9 _-]+$/i;
 const FONT_FALLBACK_PATTERN = /^[a-z0-9 _,'-]+$/i;
 const THEME_NAME_PATTERN = /^[a-z0-9_-]+$/i;
 const VALID_FONT_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+const MAX_FONT_FAMILY_LENGTH = 100;
 
 export function parseBooleanParam(value: string | null): boolean | undefined {
   if (!value) return undefined;
@@ -33,7 +34,13 @@ export function parseTextAlign(
 export function parseFontFamily(value: string | null): string | undefined {
   if (!value) return undefined;
   const normalized = value.trim();
-  if (!normalized || !FONT_FAMILY_PATTERN.test(normalized)) return undefined;
+  if (
+    !normalized ||
+    normalized.length > MAX_FONT_FAMILY_LENGTH ||
+    !FONT_FAMILY_PATTERN.test(normalized)
+  ) {
+    return undefined;
+  }
   return normalized;
 }
 
@@ -169,12 +176,14 @@ export function sanitizePreviewConfig(
 
   if (
     typeof raw.fontTitleFamily === "string" &&
+    raw.fontTitleFamily.length <= MAX_FONT_FAMILY_LENGTH &&
     FONT_FAMILY_PATTERN.test(raw.fontTitleFamily)
   ) {
     config.fontTitleFamily = raw.fontTitleFamily;
   }
   if (
     typeof raw.fontBodyFamily === "string" &&
+    raw.fontBodyFamily.length <= MAX_FONT_FAMILY_LENGTH &&
     FONT_FAMILY_PATTERN.test(raw.fontBodyFamily)
   ) {
     config.fontBodyFamily = raw.fontBodyFamily;
