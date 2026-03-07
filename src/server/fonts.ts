@@ -1,6 +1,7 @@
 import { encodeBase64 } from "@std/encoding";
 
 const FONT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_CACHE_SIZE = 50;
 const fontCache = new Map<string, {
   dataUrl: string;
   cssBlock: string;
@@ -8,6 +9,28 @@ const fontCache = new Map<string, {
 }>();
 
 const FALLBACK_WEIGHTS = [400, 700, 300, 500, 600, 200, 100, 800, 900];
+
+function cleanupCache(): void {
+  const now = Date.now();
+
+  for (const [key, entry] of fontCache.entries()) {
+    if (now - entry.timestamp > FONT_CACHE_TTL_MS) {
+      fontCache.delete(key);
+    }
+  }
+
+  if (fontCache.size <= MAX_CACHE_SIZE) {
+    return;
+  }
+
+  const entries = Array.from(fontCache.entries());
+  entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+
+  const entriesToRemove = entries.slice(0, fontCache.size - MAX_CACHE_SIZE);
+  for (const [key] of entriesToRemove) {
+    fontCache.delete(key);
+  }
+}
 
 function buildGoogleFontsUrl(
   fontFamily: string,
@@ -142,6 +165,7 @@ export async function loadGoogleFont(
         dataUrl: result.dataUrl,
         cssBlock: result.cssBlock,
       };
+      cleanupCache();
       fontCache.set(cacheKey, { ...cacheResult, timestamp: Date.now() });
       return { ...cacheResult, actualWeight: tryWeight };
     }
