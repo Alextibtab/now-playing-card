@@ -17,7 +17,7 @@
   "unstable": ["kv"],
   "deploy": {
     "org": "alextibtab",
-    "app": "tauon-now-playing",
+    "app": "now-playing",
     "runtime": {
       "mode": "dynamic",
       "entrypoint": "./src/server.ts"
