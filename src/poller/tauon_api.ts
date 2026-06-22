@@ -1,4 +1,7 @@
 import { TauonStatus } from "../types.ts";
+import { create_logger } from "../utils/logger.ts";
+
+const log = create_logger("Tauon");
 
 /**
  * Fetch the current playback status from Tauon.
@@ -14,12 +17,12 @@ export async function fetch_tauon_status(
       signal: AbortSignal.timeout(5000),
     });
     if (!response.ok) {
-      console.warn(`Tauon status fetch failed: ${response.status}`);
+      log.warn(`Tauon status fetch failed: ${response.status}`);
       return null;
     }
     return await response.json() as TauonStatus;
   } catch (error) {
-    console.warn("Failed to fetch Tauon status:", error);
+    log.warn("Failed to fetch Tauon status", error);
     return null;
   }
 }

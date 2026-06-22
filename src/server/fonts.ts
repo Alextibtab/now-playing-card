@@ -1,5 +1,7 @@
 import { encodeBase64 } from "@std/encoding";
+import { create_logger } from "../utils/logger.ts";
 
+const log = create_logger("Font");
 const FONT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_CACHE_SIZE = 50;
 const font_cache = new Map<string, {
@@ -61,7 +63,7 @@ async function fetch_google_font_css(url: string): Promise<string | null> {
     }
     return text;
   } catch (error) {
-    console.warn(`Failed to fetch Google Fonts CSS:`, error);
+    log.warn("Failed to fetch Google Fonts CSS", error);
     return null;
   }
 }
@@ -75,12 +77,12 @@ async function fetch_font_file(url: string): Promise<Uint8Array | null> {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      console.warn(`Failed to fetch font file: ${response.status}`);
+      log.warn(`Failed to fetch font file: ${response.status}`);
       return null;
     }
     return new Uint8Array(await response.arrayBuffer());
   } catch (error) {
-    console.warn(`Failed to fetch font file:`, error);
+    log.warn("Failed to fetch font file", error);
     return null;
   }
 }
@@ -163,7 +165,7 @@ export async function load_google_font(
     );
     if (result) {
       if (try_weight !== weight) {
-        console.warn(
+        log.warn(
           `Font "${font_family}" weight ${weight} not available, using weight ${try_weight} instead`,
         );
       }
@@ -177,7 +179,7 @@ export async function load_google_font(
     }
   }
 
-  console.warn(
+  log.warn(
     `Failed to load font "${font_family}" - no available weights found`,
   );
   return null;
