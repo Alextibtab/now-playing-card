@@ -11,8 +11,10 @@ import { generate_now_playing_svg } from "./svg/index.ts";
 import { validate_auth } from "./server/authentication.ts";
 import { get_now_playing, store_now_playing } from "./server/kv_storage.ts";
 import { build_svg_config, sanitize_preview_config } from "./server/config.ts";
+import { create_logger } from "./utils/logger.ts";
 import { fetch_lastfm } from "./sources/lastfm/index.ts";
 
+const log = create_logger("Server");
 const editor_cache: { template: string | null } = { template: null };
 
 function generate_nonce(): string {
@@ -34,7 +36,7 @@ async function handle_post_tauon_now_playing(
 
   try {
     const text = await req.text();
-    console.log(`Received POST [tauon]: ${text.length} chars`);
+    log.info(`Received POST [tauon]: ${text.length} chars`);
     const data = JSON.parse(text) as NowPlayingData;
     await store_now_playing(kv, "tauon", data);
     return new Response(JSON.stringify({ success: true }), {
@@ -42,7 +44,7 @@ async function handle_post_tauon_now_playing(
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("JSON parse error:", error);
+    log.error("JSON parse error", error);
     return new Response(JSON.stringify({ error: "Invalid JSON" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
@@ -82,14 +84,14 @@ async function fetch_now_playing(
     const username = Deno.env.get("LASTFM_USERNAME");
 
     if (!api_key || !username) {
-      console.warn("LastFM credentials not configured");
+      log.warn("LastFM credentials not configured");
       return null;
     }
 
     return fetch_lastfm(api_key, username);
   }
 
-  console.warn(`Source "${source}" not implemented`);
+  log.warn(`Source "${source}" not implemented`);
   return null;
 }
 
@@ -426,7 +428,7 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
       headers: new_headers,
     });
   } catch (error) {
-    console.error("Request error:", error);
+    log.error("Request error", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
@@ -438,12 +440,12 @@ async function main(): Promise<void> {
   await load({ export: true });
 
   const kv = await Deno.openKv();
-  console.log("KV connected");
+  log.info("KV connected");
 
   const port = parseInt(Deno.env.get("PORT") || "8000");
 
   Deno.serve({ port }, (req) => handle_request(req, kv));
-  console.log(`Server running on port ${port}`);
+  log.info(`Server running on port ${port}`);
 }
 
 if (import.meta.main) {

@@ -17,6 +17,8 @@ Deno TypeScript project for a Tauon Music Player "now playing" widget.
 - `src/svg/index.ts` - Pure SVG card generation (no foreignObject for GitHub
   compatibility)
 - `src/types.ts` - Shared TypeScript types
+- `src/utils/logger.ts` - Scoped leveled logging (debug/info/warn/error) with
+  ANSI color via chalk, auto-disabled on Deno Deploy / non-TTY / `NO_COLOR`
 
 The widget displays currently playing track from Tauon Music Player on GitHub
 README.
@@ -40,10 +42,10 @@ deno task fmt
 deno task deploy
 
 # Run all tests
-deno test
+deno task test
 
 # Run a single test by name
-deno test --filter "testName"
+deno task test -- --filter "testName"
 
 # Lint code
 deno lint
@@ -65,6 +67,12 @@ deno cache --unstable-kv src/server.ts
 - `DEPLOY_URL` - URL of deployed API (required)
 - `TAUON_URL` - Tauon API URL (default: http://localhost:7814)
 - `POLL_INTERVAL_MS` - Polling interval in ms (default: 10000)
+
+### Logging (both)
+
+- `LOG_LEVEL` - Minimum log level to emit (default: `info`; one of
+  `debug`/`info`/`warn`/`error`). Applies to both server and poller.
+- `NO_COLOR` - When set to any value, disables ANSI color in log output.
 
 ## Code Style Guidelines
 
@@ -108,6 +116,19 @@ deno cache --unstable-kv src/server.ts
 - Use `try/catch` for async operations and I/O
 - Log warnings for non-fatal errors (Tauon unreachable, API failures)
 - Exit with error for missing required env vars
+
+### Logging
+
+- Use `create_logger(scope)` from `src/utils/logger.ts`; never call `console.*`
+  directly. Returned object exposes `debug`/`info`/`warn`/`error` methods with
+  signature `(msg: string, ctx?: unknown)`.
+- Pass `Error` objects as the `ctx` argument; the logger renders them as
+  `error="<message>"`. Pass plain objects for structured context (`{ ms: 42 }`
+  renders as `ms=42`).
+- Keep scope labels short and lowercase-friendly, one per module: `Poller`,
+  `Server`, `API`, `Tauon`, `Art`, `Theme`, `Font`.
+- Use `set_level` in tests only; runtime level comes from `LOG_LEVEL` env.
+- Use `print_banner(title, rows)` for CLI entry banners (box-drawing chars).
 
 ### Testing
 
