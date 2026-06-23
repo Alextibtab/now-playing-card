@@ -29,7 +29,7 @@ function parse_level(value: string | undefined): LogLevel {
 
 const is_deployed = typeof Deno.env.get("DENO_DEPLOYMENT_ID") === "string";
 const no_color = typeof Deno.env.get("NO_COLOR") === "string";
-let stdin_is_tty = true;
+let stdin_is_tty: boolean;
 try {
   stdin_is_tty = Deno.stdin.isTerminal();
 } catch {
