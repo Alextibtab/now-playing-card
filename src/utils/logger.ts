@@ -1,5 +1,3 @@
-import chalk from "chalk";
-
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
 export interface Logger {
@@ -16,7 +14,6 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
   error: 3,
 };
 
-// Right-aligned 5-char labels produce uniform-width badges under bg color.
 const LEVEL_LABEL: Record<LogLevel, string> = {
   debug: "DEBUG",
   info: " INFO",
@@ -30,7 +27,6 @@ function parse_level(value: string | undefined): LogLevel {
   return "info";
 }
 
-// Disable color when: NO_COLOR set, running on Deno Deploy, or stdin not a TTY.
 const is_deployed = typeof Deno.env.get("DENO_DEPLOYMENT_ID") === "string";
 const no_color = typeof Deno.env.get("NO_COLOR") === "string";
 let stdin_is_tty = true;
@@ -39,9 +35,21 @@ try {
 } catch {
   stdin_is_tty = false;
 }
-if (is_deployed || no_color || !stdin_is_tty) {
-  chalk.level = 0;
+const color_enabled = !is_deployed && !no_color && stdin_is_tty;
+
+function paint(code: string, s: string): string {
+  return color_enabled ? `\x1b[${code}m${s}\x1b[0m` : s;
 }
+
+const dim = (s: string): string => paint("2", s);
+const cyan = (s: string): string => paint("36", s);
+const yellow = (s: string): string => paint("33", s);
+const magenta = (s: string): string => paint("35", s);
+const cyan_bold = (s: string): string => paint("36;1", s);
+const white_bold_bg_cyan = (s: string): string => paint("97;1;46", s);
+const white_bold_bg_green = (s: string): string => paint("97;1;42", s);
+const white_bold_bg_yellow = (s: string): string => paint("97;1;43", s);
+const white_bold_bg_red = (s: string): string => paint("97;1;41", s);
 
 let configured_level: LogLevel = parse_level(Deno.env.get("LOG_LEVEL"));
 
@@ -80,12 +88,12 @@ function format_value(value: unknown): string {
 }
 
 function format_pair(key: string, value: unknown): string {
-  return `${chalk.cyan(key)}=${chalk.yellow(format_value(value))}`;
+  return `${cyan(key)}=${yellow(format_value(value))}`;
 }
 
 function format_context(ctx: unknown): string {
   if (ctx === null || ctx === undefined) return "";
-  const sep = `  ${chalk.dim("·")}  `;
+  const sep = `  ${dim("·")}  `;
   if (ctx instanceof Error) {
     return sep + format_pair("error", ctx.message || String(ctx));
   }
@@ -98,7 +106,7 @@ function format_context(ctx: unknown): string {
 }
 
 function timestamp(): string {
-  return chalk.dim(new Date().toISOString().slice(11, 23));
+  return dim(new Date().toISOString().slice(11, 23));
 }
 
 const LEVEL_SYMBOL: Record<LogLevel, string> = {
@@ -112,20 +120,20 @@ function level_markup(level: LogLevel): string {
   const label = `${LEVEL_LABEL[level]} ${LEVEL_SYMBOL[level]}  `;
   switch (level) {
     case "debug":
-      return chalk.white.bold.bgCyan(label);
+      return white_bold_bg_cyan(label);
     case "info":
-      return chalk.white.bold.bgGreen(label);
+      return white_bold_bg_green(label);
     case "warn":
-      return chalk.white.bold.bgYellow(label);
+      return white_bold_bg_yellow(label);
     case "error":
-      return chalk.white.bold.bgRed(label);
+      return white_bold_bg_red(label);
   }
 }
 
 const SCOPE_WIDTH = 6;
 
 function scope_markup(scope: string): string {
-  return chalk.magenta(scope.padEnd(SCOPE_WIDTH));
+  return magenta(scope.padEnd(SCOPE_WIDTH));
 }
 
 function emit(
@@ -135,7 +143,7 @@ function emit(
   ctx?: unknown,
 ): void {
   if (LEVEL_ORDER[level] < LEVEL_ORDER[configured_level]) return;
-  const pipe = chalk.dim("│");
+  const pipe = dim("│");
   const head = `${timestamp()}  ${level_markup(level)} ${
     scope_markup(scope)
   } ${pipe}`;
@@ -164,16 +172,16 @@ export function print_banner(
     ? 0
     : Math.max(...rows.map(([, v]) => v.length));
   const inner_w = Math.max(title.length + 4, label_w + 2 + value_w);
-  const top = chalk.dim("╭─ ") + chalk.cyan.bold(title) + chalk.dim(
+  const top = dim("╭─ ") + cyan_bold(title) + dim(
     " " + "─".repeat(Math.max(0, inner_w - title.length - 1)) + "╮",
   );
-  const bottom = chalk.dim(
+  const bottom = dim(
     "╰" + "─".repeat(inner_w + 2) + "╯",
   );
   const body = rows.map(([label, value]) => {
     const pane = `${label.padEnd(label_w)}  ${value}`;
     const pad = " ".repeat(Math.max(0, inner_w - pane.length));
-    return chalk.dim("│ ") + pane + pad + chalk.dim(" │");
+    return dim("│ ") + pane + pad + dim(" │");
   });
   for (const line of [top, ...body, bottom]) sink(line);
 }
