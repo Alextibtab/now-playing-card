@@ -1,9 +1,12 @@
 import { SvgConfig, VISUALISATION_TYPES, VisualisationType } from "../types.ts";
+import { create_logger } from "../utils/logger.ts";
 import {
   MAX_FONT_FAMILY_LENGTH,
   THEME_NAME_PATTERN,
   VALID_FONT_WEIGHTS,
 } from "./constants.ts";
+
+const log = create_logger("Theme");
 const theme_cache = new Map<string, SvgConfig>();
 
 export function is_svg_config(value: unknown): value is SvgConfig {
@@ -65,13 +68,13 @@ export async function load_theme(name: string): Promise<SvgConfig | null> {
     const raw = await Deno.readTextFile(theme_url);
     const parsed = JSON.parse(raw);
     if (!is_svg_config(parsed)) {
-      console.warn(`Theme schema invalid: ${name}`);
+      log.warn(`Theme schema invalid: ${name}`);
       return null;
     }
     theme_cache.set(name, parsed);
     return parsed;
   } catch (error) {
-    console.warn(`Failed to load theme: ${name}`, error);
+    log.warn(`Failed to load theme: ${name}`, error);
     return null;
   }
 }
