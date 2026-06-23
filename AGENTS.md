@@ -18,7 +18,7 @@ Deno TypeScript project for a Tauon Music Player "now playing" widget.
   compatibility)
 - `src/types.ts` - Shared TypeScript types
 - `src/utils/logger.ts` - Scoped leveled logging (debug/info/warn/error) with
-  ANSI color via chalk, auto-disabled on Deno Deploy / non-TTY / `NO_COLOR`
+  raw ANSI color codes, auto-disabled on Deno Deploy / non-TTY / `NO_COLOR`
 
 The widget displays currently playing track from Tauon Music Player on GitHub
 README.
@@ -134,7 +134,7 @@ deno cache --unstable-kv src/server.ts
 
 - Use `Deno.test()` for test definitions
 - Test file naming: `*_test.ts` suffix
-- Place tests alongside source files or in `tests/` directory
+- Place tests in `tests/` directory
 - Use `@std/assert` for assertions
 
 ### SVG Generation

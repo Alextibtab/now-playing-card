@@ -6,7 +6,7 @@ import {
   print_banner,
   set_level,
   set_sink,
-} from "./logger.ts";
+} from "../src/utils/logger.ts";
 
 const ANSI = new RegExp(String.fromCharCode(27) + "\\[[0-9;]*m", "g");
 
