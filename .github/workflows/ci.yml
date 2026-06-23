@@ -3,7 +3,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
   check:
@@ -16,3 +15,4 @@ jobs:
       - run: deno fmt --check
       - run: deno lint
       - run: deno task check
+      - run: deno task test

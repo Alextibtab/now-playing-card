@@ -1,8 +1,11 @@
 import { ColorPalette, NowPlayingData } from "../types.ts";
+import { create_logger, print_banner } from "../utils/logger.ts";
 import { fetch_and_resize_art } from "./album_art.ts";
 import { send_to_deploy } from "./api_client.ts";
 import { should_update } from "./state.ts";
 import { fetch_tauon_status } from "./tauon_api.ts";
+
+const log = create_logger("Poller");
 
 // Configuration from environment
 const TAUON_URL = Deno.env.get("TAUON_URL") || "http://localhost:7814";
@@ -19,12 +22,12 @@ let last_art_base64: string | null = null;
 let last_colors: ColorPalette | null = null;
 
 if (!DEPLOY_URL) {
-  console.error("DEPLOY_URL environment variable is required");
+  log.error("DEPLOY_URL environment variable is required");
   Deno.exit(1);
 }
 
 if (!API_KEY) {
-  console.error("API_KEY environment variable is required");
+  log.error("API_KEY environment variable is required");
   Deno.exit(1);
 }
 
@@ -35,7 +38,7 @@ async function poll(): Promise<void> {
   const status = await fetch_tauon_status(TAUON_URL);
 
   if (!status) {
-    console.log("Tauon unreachable, skipping update");
+    log.warn("Tauon unreachable, skipping update");
     return;
   }
 
@@ -99,23 +102,24 @@ async function poll(): Promise<void> {
     last_sent_track_id = status.id;
     last_sent_status = status.status;
     last_seen_status = status.status;
-    console.log(
+    log.info(
       `Updated: ${now_playing_data.title} by ${now_playing_data.artist}`,
     );
   }
 }
 
 export async function main(): Promise<void> {
-  console.log("Tauon Now Playing Poller");
-  console.log(`  Tauon URL: ${TAUON_URL}`);
-  console.log(`  Deploy URL: ${DEPLOY_URL}`);
-  console.log(`  Poll interval: ${POLL_INTERVAL_MS}ms`);
+  print_banner("Tauon Now Playing Poller", [
+    ["Tauon URL", TAUON_URL],
+    ["Deploy URL", DEPLOY_URL ?? ""],
+    ["Poll interval", `${POLL_INTERVAL_MS}ms`],
+  ]);
 
   await poll();
 
   setInterval(poll, POLL_INTERVAL_MS);
 
-  console.log("Poller running. Press Ctrl+C to stop.");
+  log.info("Poller running. Press Ctrl+C to stop.");
 }
 
 if (import.meta.main) {

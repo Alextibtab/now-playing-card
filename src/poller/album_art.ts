@@ -1,5 +1,8 @@
 import { ColorPalette } from "../types.ts";
+import { create_logger } from "../utils/logger.ts";
 import { process_art_from_url as util_process_art_from_url } from "../utils/image_processing.ts";
+
+const log = create_logger("Art");
 
 export interface ArtResult {
   base64: string;
@@ -17,7 +20,7 @@ export async function fetch_and_resize_art(
     if (!result) return null;
     return { base64: result.base64, colors: result.colors };
   } catch (error) {
-    console.warn("Failed to fetch album art:", error);
+    log.warn("Failed to fetch album art", error);
     return null;
   }
 }

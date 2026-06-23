@@ -3,6 +3,7 @@
     "dev": "deno run --watch --allow-net --allow-env --env-file --allow-read --unstable-kv src/server.ts",
     "poll": "deno run --allow-net --allow-env --env-file --allow-read src/poller/index.ts",
     "check": "deno check src/",
+    "test": "deno test --allow-env src/ tests/",
     "fmt": "deno fmt"
   },
   "imports": {
