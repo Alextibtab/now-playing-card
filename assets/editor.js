@@ -25,22 +25,22 @@ async function fetch_sample_art() {
 const DEFAULT_THEME = {
   width: 800,
   height: 200,
-  textPrimary: "#fafafa",
-  textSecondary: "#cbd5e1",
-  textMuted: "#94a3b8",
-  albumSize: 150,
-  borderRadius: 16,
-  albumPosition: "left",
-  textAlign: "left",
-  showStatus: true,
-  showTitle: true,
-  showArtist: true,
-  showAlbum: true,
-  fontTitleFamily: "DotGothic16",
-  fontBodyFamily: "Space Mono",
-  fontTitleWeight: 400,
-  fontBodyWeight: 400,
-  fontFallback: "'Segoe UI', sans-serif",
+  text_primary: "#fafafa",
+  text_secondary: "#cbd5e1",
+  text_muted: "#94a3b8",
+  album_size: 150,
+  border_radius: 16,
+  album_position: "left",
+  text_align: "left",
+  show_status: true,
+  show_title: true,
+  show_artist: true,
+  show_album: true,
+  font_title_family: "DotGothic16",
+  font_body_family: "Space Mono",
+  font_title_weight: 400,
+  font_body_weight: 400,
+  font_fallback: "'Segoe UI', sans-serif",
   visualisation: "waveform",
 };
 
@@ -86,10 +86,16 @@ const reset_btn = document.getElementById("resetBtn");
 const export_btn = document.getElementById("exportBtn");
 const tab_theme = document.getElementById("tabTheme");
 const tab_data = document.getElementById("tabData");
+const theme_select = document.getElementById("themeSelect");
+const swatch_bg = document.getElementById("swatchBg");
+const swatch_primary = document.getElementById("swatchPrimary");
+const swatch_secondary = document.getElementById("swatchSecondary");
 
 let debounce_timer = null;
 let syncing = false;
+let loading_theme = false;
 let _active_tab = "theme";
+let current_theme_name = "default";
 
 const DANGEROUS_ELEMENTS = new Set([
   "script",
@@ -220,34 +226,43 @@ function set_color_inactive(row, _input, value_el, clear_btn) {
   clear_btn.classList.add("hidden");
 }
 
+function update_swatches(theme) {
+  const bg = theme?.card_background || "#0f0f12";
+  const primary = theme?.text_primary || "#fafafa";
+  const secondary = theme?.text_secondary || "#cbd5e1";
+  swatch_bg.style.background = bg;
+  swatch_primary.style.background = primary;
+  swatch_secondary.style.background = secondary;
+}
+
 function sync_controls_from_theme(theme) {
   if (!theme) return;
   syncing = true;
   if (theme.visualisation) vis_select.value = theme.visualisation;
-  if (typeof theme.showStatus === "boolean") {
-    show_status.checked = theme.showStatus;
+  if (typeof theme.show_status === "boolean") {
+    show_status.checked = theme.show_status;
   }
-  if (typeof theme.showTitle === "boolean") {
-    show_title.checked = theme.showTitle;
+  if (typeof theme.show_title === "boolean") {
+    show_title.checked = theme.show_title;
   }
-  if (typeof theme.showArtist === "boolean") {
-    show_artist.checked = theme.showArtist;
+  if (typeof theme.show_artist === "boolean") {
+    show_artist.checked = theme.show_artist;
   }
-  if (typeof theme.showAlbum === "boolean") {
-    show_album.checked = theme.showAlbum;
+  if (typeof theme.show_album === "boolean") {
+    show_album.checked = theme.show_album;
   }
-  if (theme.albumPosition) {
-    album_position.value = theme.albumPosition;
+  if (theme.album_position) {
+    album_position.value = theme.album_position;
   }
-  if (theme.textAlign) text_align_el.value = theme.textAlign;
+  if (theme.text_align) text_align_el.value = theme.text_align;
 
-  if (theme.cardBackground) {
+  if (theme.card_background) {
     set_color_active(
       card_bg_row,
       card_bg_color,
       card_bg_value,
       card_bg_clear,
-      theme.cardBackground,
+      theme.card_background,
     );
   } else {
     set_color_inactive(
@@ -257,13 +272,13 @@ function sync_controls_from_theme(theme) {
       card_bg_clear,
     );
   }
-  if (theme.cardBorder) {
+  if (theme.card_border) {
     set_color_active(
       card_border_row,
       card_border_color,
       card_border_value,
       card_border_clear,
-      theme.cardBorder,
+      theme.card_border,
     );
   } else {
     set_color_inactive(
@@ -274,32 +289,34 @@ function sync_controls_from_theme(theme) {
     );
   }
 
+  update_swatches(theme);
   syncing = false;
 }
 
 function apply_controls_to_theme() {
   const theme = get_theme_from_editor();
   if (!theme) return null;
-  theme.showStatus = show_status.checked;
-  theme.showTitle = show_title.checked;
-  theme.showArtist = show_artist.checked;
-  theme.showAlbum = show_album.checked;
-  theme.albumPosition = album_position.value;
-  theme.textAlign = text_align_el.value;
+  theme.show_status = show_status.checked;
+  theme.show_title = show_title.checked;
+  theme.show_artist = show_artist.checked;
+  theme.show_album = show_album.checked;
+  theme.album_position = album_position.value;
+  theme.text_align = text_align_el.value;
   theme.visualisation = vis_select.value;
 
   if (!card_bg_row.classList.contains("inactive")) {
-    theme.cardBackground = card_bg_color.value;
+    theme.card_background = card_bg_color.value;
   } else {
-    delete theme.cardBackground;
+    delete theme.card_background;
   }
   if (!card_border_row.classList.contains("inactive")) {
-    theme.cardBorder = card_border_color.value;
+    theme.card_border = card_border_color.value;
   } else {
-    delete theme.cardBorder;
+    delete theme.card_border;
   }
 
   set_editor_value(theme_editor, theme);
+  update_swatches(theme);
   return theme;
 }
 
@@ -368,9 +385,20 @@ function schedule_render() {
   debounce_timer = setTimeout(render_preview, 300);
 }
 
+function mark_custom_theme() {
+  if (loading_theme || syncing) return;
+  if (current_theme_name !== "__custom__") {
+    current_theme_name = "__custom__";
+    theme_select.value = "__custom__";
+  }
+}
+
 theme_editor.addEventListener("input", () => {
   const theme = get_theme_from_editor();
-  if (theme) sync_controls_from_theme(theme);
+  if (theme) {
+    sync_controls_from_theme(theme);
+    mark_custom_theme();
+  }
   schedule_render();
 });
 
@@ -379,6 +407,7 @@ data_editor.addEventListener("input", schedule_render);
 function on_control_change() {
   if (syncing) return;
   apply_controls_to_theme();
+  mark_custom_theme();
   schedule_render();
 }
 
@@ -406,6 +435,7 @@ card_bg_color.addEventListener("input", () => {
   );
   if (!syncing) {
     apply_controls_to_theme();
+    mark_custom_theme();
     schedule_render();
   }
 });
@@ -420,6 +450,7 @@ card_border_color.addEventListener("input", () => {
   );
   if (!syncing) {
     apply_controls_to_theme();
+    mark_custom_theme();
     schedule_render();
   }
 });
@@ -432,6 +463,7 @@ card_bg_clear.addEventListener("click", () => {
     card_bg_clear,
   );
   apply_controls_to_theme();
+  mark_custom_theme();
   schedule_render();
 });
 
@@ -443,6 +475,7 @@ card_border_clear.addEventListener("click", () => {
     card_border_clear,
   );
   apply_controls_to_theme();
+  mark_custom_theme();
   schedule_render();
 });
 
@@ -487,6 +520,55 @@ export_btn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
+async function load_theme_by_name(name) {
+  if (name === "__custom__") return;
+  loading_theme = true;
+  try {
+    const res = await fetch(`/api/themes/${name}`);
+    if (!res.ok) {
+      set_status("error", "Failed to load theme");
+      loading_theme = false;
+      return;
+    }
+    const theme = await res.json();
+    set_editor_value(theme_editor, theme);
+    sync_controls_from_theme(theme);
+    current_theme_name = name;
+    theme_select.value = name;
+    schedule_render();
+  } catch {
+    set_status("error", "Failed to load theme");
+  }
+  loading_theme = false;
+}
+
+async function fetch_theme_list() {
+  try {
+    const res = await fetch("/api/themes");
+    if (!res.ok) return;
+    const themes = await res.json();
+    theme_select.innerHTML = "";
+    for (const entry of themes) {
+      const opt = document.createElement("option");
+      opt.value = entry.name;
+      opt.textContent = entry.display_name;
+      opt.title = entry.description;
+      theme_select.appendChild(opt);
+    }
+    const custom_opt = document.createElement("option");
+    custom_opt.value = "__custom__";
+    custom_opt.textContent = "Custom";
+    theme_select.appendChild(custom_opt);
+    theme_select.value = current_theme_name;
+  } catch {
+    // keep default option if fetch fails
+  }
+}
+
+theme_select.addEventListener("change", () => {
+  load_theme_by_name(theme_select.value);
+});
+
 reset_btn.addEventListener("click", async () => {
   syncing = true;
   status_select.value = "playing";
@@ -510,7 +592,10 @@ reset_btn.addEventListener("click", async () => {
     card_border_clear,
   );
   syncing = false;
+  current_theme_name = "default";
+  theme_select.value = "default";
   set_editor_value(theme_editor, { ...DEFAULT_THEME });
+  update_swatches(DEFAULT_THEME);
   const art_value = await fetch_sample_art();
   set_editor_value(data_editor, {
     ...DEFAULT_DATA,
@@ -521,7 +606,9 @@ reset_btn.addEventListener("click", async () => {
 });
 
 async function init() {
-  const art_value = await fetch_sample_art();
+  const art_promise = fetch_sample_art();
+  await fetch_theme_list();
+  const art_value = await art_promise;
   set_editor_value(theme_editor, { ...DEFAULT_THEME });
   set_editor_value(data_editor, {
     ...DEFAULT_DATA,

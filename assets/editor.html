@@ -19,6 +19,20 @@
           <summary>Controls</summary>
           <div class="controls-body">
             <div class="control-group">
+              <label>Theme</label>
+              <div class="theme-selector">
+                <select id="themeSelect">
+                  <option value="default">Default</option>
+                </select>
+                <div class="theme-swatches" id="themeSwatches">
+                  <span class="theme-swatch" id="swatchBg"></span>
+                  <span class="theme-swatch" id="swatchPrimary"></span>
+                  <span class="theme-swatch" id="swatchSecondary"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="control-group">
               <label>Playback State</label>
               <select id="statusSelect">
                 <option value="playing">Playing</option>

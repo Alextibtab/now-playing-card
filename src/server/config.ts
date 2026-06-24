@@ -114,61 +114,62 @@ export function sanitize_preview_config(
   if (typeof raw.height === "number" && Number.isFinite(raw.height)) {
     config.height = clamp(Math.round(raw.height), 80, 600);
   }
-  if (typeof raw.albumSize === "number" && Number.isFinite(raw.albumSize)) {
-    config.album_size = clamp(Math.round(raw.albumSize), 40, 400);
+  if (
+    typeof raw.album_size === "number" &&
+    Number.isFinite(raw.album_size)
+  ) {
+    config.album_size = clamp(Math.round(raw.album_size), 40, 400);
   }
   if (
-    typeof raw.borderRadius === "number" && Number.isFinite(raw.borderRadius)
+    typeof raw.border_radius === "number" &&
+    Number.isFinite(raw.border_radius)
   ) {
-    config.border_radius = clamp(Math.round(raw.borderRadius), 0, 64);
+    config.border_radius = clamp(Math.round(raw.border_radius), 0, 64);
   }
 
   if (
-    typeof raw.cardBackground === "string" &&
-    HEX_COLOR_PATTERN.test(raw.cardBackground)
+    typeof raw.card_background === "string" &&
+    HEX_COLOR_PATTERN.test(raw.card_background)
   ) {
-    config.card_background = raw.cardBackground;
+    config.card_background = raw.card_background;
   }
   if (
-    typeof raw.cardBorder === "string" &&
-    HEX_COLOR_PATTERN.test(raw.cardBorder)
+    typeof raw.card_border === "string" &&
+    HEX_COLOR_PATTERN.test(raw.card_border)
   ) {
-    config.card_border = raw.cardBorder;
+    config.card_border = raw.card_border;
   }
   for (
-    const key of ["textPrimary", "textSecondary", "textMuted"] as const
+    const key of ["text_primary", "text_secondary", "text_muted"] as const
   ) {
     const val = raw[key];
     if (typeof val === "string" && HEX_COLOR_PATTERN.test(val)) {
-      if (key === "textPrimary") config.text_primary = val;
-      else if (key === "textSecondary") config.text_secondary = val;
-      else if (key === "textMuted") config.text_muted = val;
+      config[key] = val;
     }
   }
 
-  if (raw.albumPosition === "left" || raw.albumPosition === "right") {
-    config.album_position = raw.albumPosition;
+  if (
+    raw.album_position === "left" || raw.album_position === "right"
+  ) {
+    config.album_position = raw.album_position;
   }
   if (
-    raw.textAlign === "left" || raw.textAlign === "center" ||
-    raw.textAlign === "right"
+    raw.text_align === "left" || raw.text_align === "center" ||
+    raw.text_align === "right"
   ) {
-    config.text_align = raw.textAlign;
+    config.text_align = raw.text_align;
   }
 
   for (
     const key of [
-      "showStatus",
-      "showTitle",
-      "showArtist",
-      "showAlbum",
+      "show_status",
+      "show_title",
+      "show_artist",
+      "show_album",
     ] as const
   ) {
     if (typeof raw[key] === "boolean") {
-      if (key === "showStatus") config.show_status = raw[key] as boolean;
-      else if (key === "showTitle") config.show_title = raw[key] as boolean;
-      else if (key === "showArtist") config.show_artist = raw[key] as boolean;
-      else if (key === "showAlbum") config.show_album = raw[key] as boolean;
+      config[key] = raw[key] as boolean;
     }
   }
 
@@ -180,37 +181,37 @@ export function sanitize_preview_config(
   }
 
   if (
-    typeof raw.fontTitleFamily === "string" &&
-    raw.fontTitleFamily.length <= MAX_FONT_FAMILY_LENGTH &&
-    FONT_FAMILY_PATTERN.test(raw.fontTitleFamily)
+    typeof raw.font_title_family === "string" &&
+    raw.font_title_family.length <= MAX_FONT_FAMILY_LENGTH &&
+    FONT_FAMILY_PATTERN.test(raw.font_title_family)
   ) {
-    config.font_title_family = raw.fontTitleFamily;
+    config.font_title_family = raw.font_title_family;
   }
   if (
-    typeof raw.fontBodyFamily === "string" &&
-    raw.fontBodyFamily.length <= MAX_FONT_FAMILY_LENGTH &&
-    FONT_FAMILY_PATTERN.test(raw.fontBodyFamily)
+    typeof raw.font_body_family === "string" &&
+    raw.font_body_family.length <= MAX_FONT_FAMILY_LENGTH &&
+    FONT_FAMILY_PATTERN.test(raw.font_body_family)
   ) {
-    config.font_body_family = raw.fontBodyFamily;
+    config.font_body_family = raw.font_body_family;
   }
   if (
-    typeof raw.fontTitleWeight === "number" &&
-    VALID_FONT_WEIGHTS.includes(raw.fontTitleWeight)
+    typeof raw.font_title_weight === "number" &&
+    VALID_FONT_WEIGHTS.includes(raw.font_title_weight)
   ) {
-    config.font_title_weight = raw.fontTitleWeight;
+    config.font_title_weight = raw.font_title_weight;
   }
   if (
-    typeof raw.fontBodyWeight === "number" &&
-    VALID_FONT_WEIGHTS.includes(raw.fontBodyWeight)
+    typeof raw.font_body_weight === "number" &&
+    VALID_FONT_WEIGHTS.includes(raw.font_body_weight)
   ) {
-    config.font_body_weight = raw.fontBodyWeight;
+    config.font_body_weight = raw.font_body_weight;
   }
   if (
-    typeof raw.fontFallback === "string" &&
-    raw.fontFallback.length > 0 && raw.fontFallback.length <= 100 &&
-    FONT_FALLBACK_PATTERN.test(raw.fontFallback)
+    typeof raw.font_fallback === "string" &&
+    raw.font_fallback.length > 0 && raw.font_fallback.length <= 100 &&
+    FONT_FALLBACK_PATTERN.test(raw.font_fallback)
   ) {
-    config.font_fallback = raw.fontFallback;
+    config.font_fallback = raw.font_fallback;
   }
 
   return config;
