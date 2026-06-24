@@ -1,5 +1,5 @@
-import { NowPlayingData } from "../types.ts";
-import { create_logger } from "../utils/logger.ts";
+import { NowPlayingData } from "../../types.ts";
+import { create_logger } from "../../utils/logger.ts";
 
 const log = create_logger("API");
 

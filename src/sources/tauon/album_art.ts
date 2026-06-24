@@ -1,6 +1,6 @@
-import { ColorPalette } from "../types.ts";
-import { create_logger } from "../utils/logger.ts";
-import { process_art_from_url as util_process_art_from_url } from "../utils/image_processing.ts";
+import { ColorPalette } from "../../types.ts";
+import { create_logger } from "../../utils/logger.ts";
+import { process_art_from_url as util_process_art_from_url } from "../../utils/image_processing.ts";
 
 const log = create_logger("Art");
 

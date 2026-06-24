@@ -1,4 +1,4 @@
-import { TauonStatus } from "../types.ts";
+import { TauonStatus } from "../../types.ts";
 
 /**
  * Decide whether the poller should send an update.

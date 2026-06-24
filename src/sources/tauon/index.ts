@@ -1,5 +1,5 @@
-import { ColorPalette, NowPlayingData } from "../types.ts";
-import { create_logger, print_banner } from "../utils/logger.ts";
+import { ColorPalette, NowPlayingData } from "../../types.ts";
+import { create_logger, print_banner } from "../../utils/logger.ts";
 import { fetch_and_resize_art } from "./album_art.ts";
 import { send_to_deploy } from "./api_client.ts";
 import { should_update } from "./state.ts";
