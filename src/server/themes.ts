@@ -64,7 +64,7 @@ export async function load_theme(name: string): Promise<SvgConfig | null> {
   }
 
   try {
-    const theme_url = new URL(`../themes/${name}.json`, import.meta.url);
+    const theme_url = new URL(`../../themes/${name}.json`, import.meta.url);
     const raw = await Deno.readTextFile(theme_url);
     const parsed = JSON.parse(raw);
     if (!is_svg_config(parsed)) {

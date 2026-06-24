@@ -1,0 +1,23 @@
+{
+  "width": 800,
+  "height": 200,
+  "card_background": "#eff1f5",
+  "card_border": "#ccd0da",
+  "text_primary": "#4c4f69",
+  "text_secondary": "#5c5f77",
+  "text_muted": "#9ca0b0",
+  "album_size": 150,
+  "border_radius": 16,
+  "album_position": "left",
+  "text_align": "left",
+  "show_status": true,
+  "show_title": true,
+  "show_artist": true,
+  "show_album": true,
+  "font_title_family": "Inter",
+  "font_body_family": "JetBrains Mono",
+  "font_title_weight": 600,
+  "font_body_weight": 400,
+  "font_fallback": "'Segoe UI', sans-serif",
+  "visualisation": "orbs"
+}
