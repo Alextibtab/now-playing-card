@@ -12,6 +12,20 @@
         <h1>Now Playing</h1>
         <span class="sep">/</span>
         <span class="subtitle">SVG Editor</span>
+        <div class="header-spacer"></div>
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search songs..."
+            autocomplete="off"
+            aria-label="Search songs"
+          />
+        </div>
       </div>
 
       <div class="sidebar">
@@ -205,6 +219,22 @@
         <div class="preview-container">
           <div class="svg-wrapper" id="svgPreview"></div>
         </div>
+      </div>
+    </div>
+
+    <div class="search-overlay" id="searchOverlay" aria-hidden="true">
+      <div class="search-backdrop" id="searchBackdrop"></div>
+      <div class="search-sidebar" role="dialog" aria-label="Song search results">
+        <div class="search-sidebar-header">
+          <span class="search-sidebar-title">Results</span>
+          <button class="search-close-btn" id="searchCloseBtn" aria-label="Close search results">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="search-results" id="searchResults"></div>
       </div>
     </div>
 
