@@ -66,6 +66,9 @@ export interface SvgConfig {
   height: number;
   card_background?: string;
   card_border?: string;
+  highlight?: string;
+  accent?: string;
+  dominant?: string;
   text_primary: string;
   text_secondary: string;
   text_muted: string;

@@ -81,6 +81,19 @@ export async function build_svg_config(
   const font_body_family = parse_font_family(params.get("fontBodyFamily"));
   const font_title_weight = parse_font_weight(params.get("fontTitleWeight"));
   const font_body_weight = parse_font_weight(params.get("fontBodyWeight"));
+  const highlight_param = params.get("highlight");
+  const highlight = highlight_param &&
+      HEX_COLOR_PATTERN.test(highlight_param)
+    ? highlight_param
+    : undefined;
+  const accent_param = params.get("accent");
+  const accent = accent_param && HEX_COLOR_PATTERN.test(accent_param)
+    ? accent_param
+    : undefined;
+  const dominant_param = params.get("dominant");
+  const dominant = dominant_param && HEX_COLOR_PATTERN.test(dominant_param)
+    ? dominant_param
+    : undefined;
   const base_config: SvgConfig = {
     ...default_svg_config,
     ...(theme || {}),
@@ -95,6 +108,9 @@ export async function build_svg_config(
     ...(font_body_family ? { font_body_family } : {}),
     ...(font_title_weight !== undefined ? { font_title_weight } : {}),
     ...(font_body_weight !== undefined ? { font_body_weight } : {}),
+    ...(highlight ? { highlight } : {}),
+    ...(accent ? { accent } : {}),
+    ...(dominant ? { dominant } : {}),
   };
   return base_config;
 }
@@ -138,6 +154,14 @@ export function sanitize_preview_config(
     HEX_COLOR_PATTERN.test(raw.card_border)
   ) {
     config.card_border = raw.card_border;
+  }
+  for (
+    const key of ["highlight", "accent", "dominant"] as const
+  ) {
+    const val = raw[key];
+    if (typeof val === "string" && HEX_COLOR_PATTERN.test(val)) {
+      config[key] = val;
+    }
   }
   for (
     const key of ["text_primary", "text_secondary", "text_muted"] as const

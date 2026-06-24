@@ -50,6 +50,9 @@ export function compute_colors(
   config: {
     card_background?: string;
     card_border?: string;
+    highlight?: string;
+    accent?: string;
+    dominant?: string;
     text_primary: string;
     text_secondary: string;
     text_muted: string;
@@ -57,10 +60,15 @@ export function compute_colors(
   mix_colors: (color1: string, color2: string, ratio: number) => string,
 ): ColorConfig {
   const colors = data?.colors;
-  const dominant_color = escape_xml(colors?.dominant || "#27272a");
-  const accent_color = escape_xml(colors?.accent || "#22c55e");
+  const dominant_color = escape_xml(
+    config.dominant || colors?.dominant || "#27272a",
+  );
+  const accent_color = escape_xml(
+    config.accent || colors?.accent || "#22c55e",
+  );
   const highlight = escape_xml(
-    colors?.highlight || mix_colors(accent_color, "#ffffff", 0.45),
+    config.highlight || colors?.highlight ||
+      mix_colors(accent_color, "#ffffff", 0.45),
   );
 
   const base_dark = escape_xml(
