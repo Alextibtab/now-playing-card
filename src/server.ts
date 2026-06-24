@@ -11,8 +11,10 @@ import { generate_now_playing_svg } from "./svg/index.ts";
 import { validate_auth } from "./server/authentication.ts";
 import { get_now_playing, store_now_playing } from "./server/kv_storage.ts";
 import { build_svg_config, sanitize_preview_config } from "./server/config.ts";
+import { load_theme } from "./server/themes.ts";
 import { create_logger } from "./utils/logger.ts";
 import { fetch_lastfm } from "./sources/lastfm/index.ts";
+import { THEME_REGISTRY } from "../themes/registry.ts";
 
 const log = create_logger("Server");
 const editor_cache: { template: string | null } = { template: null };
@@ -217,6 +219,33 @@ async function handle_get_asset(
   }
 }
 
+function handle_get_themes(): Response {
+  return new Response(JSON.stringify(THEME_REGISTRY), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
+}
+
+async function handle_get_theme(name: string): Promise<Response> {
+  const theme = await load_theme(name);
+  if (!theme) {
+    return new Response(JSON.stringify({ error: "Theme not found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return new Response(JSON.stringify(theme), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
+}
+
 function handle_get_preview(req: Request, source: SourceType): Response {
   const params = new URL(req.url).searchParams;
   const nonce = generate_nonce();
@@ -367,6 +396,13 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
       response = await handle_get_asset("sample-art.jpg");
     } else if (path === "/api/preview" && req.method === "POST") {
       response = await handle_preview_render(req);
+    } else if (path === "/api/themes" && req.method === "GET") {
+      response = handle_get_themes();
+    } else if (
+      path.startsWith("/api/themes/") && req.method === "GET"
+    ) {
+      const theme_name = path.slice("/api/themes/".length);
+      response = await handle_get_theme(theme_name);
     } else if (path === "/") {
       response = new Response(
         JSON.stringify({
