@@ -164,6 +164,31 @@
           ></textarea>
         </div>
 
+        <details class="embed-section" open>
+          <summary>Embed</summary>
+          <div class="embed-body">
+            <div class="control-group">
+              <label>Source</label>
+              <select id="sourceSelect">
+                <option value="tauon">Tauon</option>
+                <option value="lastfm">Last.fm</option>
+              </select>
+            </div>
+            <div class="embed-tabs">
+              <button class="embed-tab active" data-format="url">URL</button>
+              <button class="embed-tab" data-format="markdown">
+                Markdown
+              </button>
+              <button class="embed-tab" data-format="html">HTML</button>
+            </div>
+            <div class="embed-output-row">
+              <input type="text" id="embedOutput" readonly />
+              <button class="embed-copy" id="copyBtn">Copy</button>
+            </div>
+            <span class="color-hint" id="embedNote"></span>
+          </div>
+        </details>
+
         <div class="footer-bar">
           <div class="footer-left">
             <button class="footer-btn danger" id="resetBtn">Reset</button>

@@ -90,12 +90,18 @@ const theme_select = document.getElementById("themeSelect");
 const swatch_bg = document.getElementById("swatchBg");
 const swatch_primary = document.getElementById("swatchPrimary");
 const swatch_secondary = document.getElementById("swatchSecondary");
+const source_select = document.getElementById("sourceSelect");
+const embed_output = document.getElementById("embedOutput");
+const copy_btn = document.getElementById("copyBtn");
+const embed_note = document.getElementById("embedNote");
+const embed_tabs = document.querySelectorAll(".embed-tab");
 
 let debounce_timer = null;
 let syncing = false;
 let loading_theme = false;
 let _active_tab = "theme";
 let current_theme_name = "default";
+let active_embed_format = "url";
 
 const DANGEROUS_ELEMENTS = new Set([
   "script",
@@ -383,6 +389,7 @@ async function render_preview() {
 function schedule_render() {
   clearTimeout(debounce_timer);
   debounce_timer = setTimeout(render_preview, 300);
+  update_embed_output();
 }
 
 function mark_custom_theme() {
@@ -535,6 +542,7 @@ async function load_theme_by_name(name) {
     sync_controls_from_theme(theme);
     current_theme_name = name;
     theme_select.value = name;
+    update_embed_output();
     schedule_render();
   } catch {
     set_status("error", "Failed to load theme");
@@ -605,6 +613,130 @@ reset_btn.addEventListener("click", async () => {
   schedule_render();
 });
 
+function generate_widget_url() {
+  const source = source_select.value;
+  const base = `${globalThis.location.origin}/${source}/now-playing.svg`;
+  const params = new URLSearchParams();
+  const theme = get_theme_from_editor();
+  if (!theme) return base;
+
+  if (
+    current_theme_name !== "default" &&
+    current_theme_name !== "__custom__"
+  ) {
+    params.set("theme", current_theme_name);
+  }
+
+  if (
+    current_theme_name === "default" ||
+    current_theme_name === "__custom__"
+  ) {
+    if (theme.visualisation && theme.visualisation !== "waveform") {
+      params.set("vis", theme.visualisation);
+    }
+    if (theme.album_position === "right") {
+      params.set("position", "right");
+    }
+    if (theme.text_align && theme.text_align !== "left") {
+      params.set("align", theme.text_align);
+    }
+    if (theme.show_status === false) params.set("showStatus", "0");
+    if (theme.show_title === false) params.set("showTitle", "0");
+    if (theme.show_artist === false) params.set("showArtist", "0");
+    if (theme.show_album === false) params.set("showAlbum", "0");
+    if (
+      theme.font_title_family &&
+      theme.font_title_family !== DEFAULT_THEME.font_title_family
+    ) {
+      params.set("fontTitleFamily", theme.font_title_family);
+    }
+    if (
+      theme.font_body_family &&
+      theme.font_body_family !== DEFAULT_THEME.font_body_family
+    ) {
+      params.set("fontBodyFamily", theme.font_body_family);
+    }
+    if (
+      theme.font_title_weight &&
+      theme.font_title_weight !== DEFAULT_THEME.font_title_weight
+    ) {
+      params.set("fontTitleWeight", String(theme.font_title_weight));
+    }
+    if (
+      theme.font_body_weight &&
+      theme.font_body_weight !== DEFAULT_THEME.font_body_weight
+    ) {
+      params.set("fontBodyWeight", String(theme.font_body_weight));
+    }
+  }
+
+  const qs = params.toString();
+  return qs ? `${base}?${qs}` : base;
+}
+
+function has_theme_only_overrides() {
+  if (current_theme_name !== "__custom__") return false;
+  const theme = get_theme_from_editor();
+  if (!theme) return false;
+  const d = DEFAULT_THEME;
+  return !!(
+    theme.card_background ||
+    theme.card_border ||
+    theme.text_primary !== d.text_primary ||
+    theme.text_secondary !== d.text_secondary ||
+    theme.text_muted !== d.text_muted ||
+    theme.width !== d.width ||
+    theme.height !== d.height ||
+    theme.album_size !== d.album_size ||
+    theme.border_radius !== d.border_radius
+  );
+}
+
+function update_embed_output() {
+  const url = generate_widget_url();
+  let output;
+  if (active_embed_format === "markdown") {
+    output = `![Now Playing](${url})`;
+  } else if (active_embed_format === "html") {
+    output = `<img src="${url}" alt="Now Playing" width="800" />`;
+  } else {
+    output = url;
+  }
+  embed_output.value = output;
+
+  if (has_theme_only_overrides()) {
+    embed_note.textContent = "Custom colors/dimensions require a theme file. " +
+      "Use Export Theme to save.";
+  } else {
+    embed_note.textContent = "";
+  }
+}
+
+embed_tabs.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    embed_tabs.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    active_embed_format = btn.dataset.format;
+    update_embed_output();
+  });
+});
+
+source_select.addEventListener("change", update_embed_output);
+
+copy_btn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(embed_output.value);
+    copy_btn.textContent = "Copied!";
+    copy_btn.classList.add("copied");
+    setTimeout(() => {
+      copy_btn.textContent = "Copy";
+      copy_btn.classList.remove("copied");
+    }, 1500);
+  } catch {
+    embed_output.select();
+  }
+});
+
 async function init() {
   const art_promise = fetch_sample_art();
   await fetch_theme_list();
@@ -616,6 +748,7 @@ async function init() {
     updated_at: Date.now(),
   });
   sync_controls_from_theme(DEFAULT_THEME);
+  update_embed_output();
   render_preview();
 }
 
