@@ -12,8 +12,8 @@ Deno TypeScript project for a Tauon Music Player "now playing" widget.
 - `src/server/fonts.ts` - Google Fonts loading/caching
 - `src/server/themes.ts` - Theme loading/validation
 - `src/server/config.ts` - Config parsing
-- `src/poller/index.ts` - Local poller: polls Tauon API, resizes album art,
-  pushes to Deploy API
+- `src/sources/tauon/index.ts` - Local poller: polls Tauon API, resizes album
+  art, pushes to Deploy API
 - `src/svg/index.ts` - Pure SVG card generation (no foreignObject for GitHub
   compatibility)
 - `src/types.ts` - Shared TypeScript types
@@ -30,7 +30,7 @@ README.
 deno task dev
 
 # Run the local poller (requires env vars)
-deno task poll
+deno task tauon
 
 # Type check all files
 deno task check
@@ -92,7 +92,8 @@ deno cache --unstable-kv src/server.ts
 - Use relative imports for local modules:
   `import { generate_now_playing_svg } from "./svg/index.ts";`
 - Always include `.ts` extension in relative imports
-- Use npm packages when needed: `import sharp from "sharp";`
+- Prefer JSR registry imports; fall back to npm packages only when no JSR
+  equivalent exists
 
 ### Formatting
 
@@ -156,6 +157,4 @@ deno cache --unstable-kv src/server.ts
 ## Deno Configuration
 
 - See `deno.json` for task definitions and import maps
-- `nodeModulesDir: "auto"` enabled for npm packages (sharp)
-- `--allow-ffi` required for sharp image processing in poller
 - `--unstable-kv` required for Deno KV (local development)

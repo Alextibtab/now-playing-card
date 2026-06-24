@@ -1,5 +1,5 @@
-import { TauonStatus } from "../types.ts";
-import { create_logger } from "../utils/logger.ts";
+import { TauonStatus } from "../../types.ts";
+import { create_logger } from "../../utils/logger.ts";
 
 const log = create_logger("Tauon");
 
