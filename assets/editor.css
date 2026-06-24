@@ -409,6 +409,131 @@ select:focus {
   height: auto;
 }
 
+.embed-section {
+  border-top: 1px solid #27272a;
+}
+
+.embed-section summary {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #a1a1aa;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.embed-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.embed-section summary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent #52525b;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.embed-section[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.embed-section summary:hover {
+  color: #e4e4e7;
+}
+
+.embed-body {
+  padding: 0 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.embed-tabs {
+  display: flex;
+  gap: 2px;
+  background: #18181b;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.embed-tab {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #52525b;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.embed-tab:hover {
+  color: #a1a1aa;
+}
+
+.embed-tab.active {
+  color: #e4e4e7;
+  background: #27272a;
+}
+
+.embed-output-row {
+  display: flex;
+  gap: 6px;
+}
+
+.embed-output-row input {
+  flex: 1;
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: "SF Mono", "Cascadia Code", ui-monospace, monospace;
+  font-size: 11px;
+  color: #a1a1aa;
+  min-width: 0;
+}
+
+.embed-output-row input:focus {
+  outline: none;
+  border-color: #3f3f46;
+}
+
+.embed-copy {
+  background: #a78bfa;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #09090b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.embed-copy:hover {
+  background: #c4b5fd;
+}
+
+.embed-copy.copied {
+  background: #4ade80;
+}
+
 .footer-bar {
   padding: 8px 16px;
   display: flex;
