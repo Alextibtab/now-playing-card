@@ -1,0 +1,23 @@
+{
+  "width": 800,
+  "height": 200,
+  "card_background": "#282a36",
+  "card_border": "#44475a",
+  "text_primary": "#f8f8f2",
+  "text_secondary": "#bd93f9",
+  "text_muted": "#6272a4",
+  "album_size": 150,
+  "border_radius": 16,
+  "album_position": "left",
+  "text_align": "left",
+  "show_status": true,
+  "show_title": true,
+  "show_artist": true,
+  "show_album": true,
+  "font_title_family": "Fira Sans",
+  "font_body_family": "Fira Code",
+  "font_title_weight": 600,
+  "font_body_weight": 400,
+  "font_fallback": "'Segoe UI', sans-serif",
+  "visualisation": "particles"
+}

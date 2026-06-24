@@ -1,0 +1,23 @@
+{
+  "width": 800,
+  "height": 200,
+  "card_background": "#282828",
+  "card_border": "#3c3836",
+  "text_primary": "#ebdbb2",
+  "text_secondary": "#d5c4a1",
+  "text_muted": "#928374",
+  "album_size": 150,
+  "border_radius": 16,
+  "album_position": "left",
+  "text_align": "left",
+  "show_status": true,
+  "show_title": true,
+  "show_artist": true,
+  "show_album": true,
+  "font_title_family": "IBM Plex Sans",
+  "font_body_family": "IBM Plex Mono",
+  "font_title_weight": 600,
+  "font_body_weight": 400,
+  "font_fallback": "'Segoe UI', sans-serif",
+  "visualisation": "equalizer"
+}
