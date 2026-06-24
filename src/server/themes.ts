@@ -31,6 +31,9 @@ export function is_svg_config(value: unknown): value is SvgConfig {
     (config.card_background === undefined ||
       is_string(config.card_background)) &&
     (config.card_border === undefined || is_string(config.card_border)) &&
+    (config.highlight === undefined || is_string(config.highlight)) &&
+    (config.accent === undefined || is_string(config.accent)) &&
+    (config.dominant === undefined || is_string(config.dominant)) &&
     is_string(config.text_primary) &&
     is_string(config.text_secondary) &&
     is_string(config.text_muted) &&
