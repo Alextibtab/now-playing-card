@@ -598,8 +598,9 @@ reset_btn.addEventListener("click", async () => {
   update_swatches(DEFAULT_THEME);
   const now_playing = await fetch_tauon_data();
   if (now_playing) {
-    status_select.value =
-      now_playing.status === "playing" ? "playing" : "last-played";
+    status_select.value = now_playing.status === "playing"
+      ? "playing"
+      : "last-played";
     set_editor_value(data_editor, {
       ...now_playing,
       updated_at: Date.now(),
@@ -725,8 +726,7 @@ function hide_search_sidebar() {
 }
 
 function render_search_message(text) {
-  search_results_el.innerHTML =
-    `<div class="search-message">${text}</div>`;
+  search_results_el.innerHTML = `<div class="search-message">${text}</div>`;
 }
 
 function render_search_results(results) {
@@ -805,7 +805,9 @@ async function run_search(query) {
   show_search_sidebar();
   render_search_message("Searching...");
   try {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}`);
+    const res = await fetch(
+      `/api/search?q=${encodeURIComponent(query.trim())}`,
+    );
     if (!res.ok) throw new Error("Search failed");
     const results = await res.json();
     render_search_results(results);
@@ -885,8 +887,9 @@ async function init() {
   ]);
   set_editor_value(theme_editor, { ...DEFAULT_THEME });
   if (now_playing) {
-    status_select.value =
-      now_playing.status === "playing" ? "playing" : "last-played";
+    status_select.value = now_playing.status === "playing"
+      ? "playing"
+      : "last-played";
     set_editor_value(data_editor, {
       ...now_playing,
       updated_at: Date.now(),

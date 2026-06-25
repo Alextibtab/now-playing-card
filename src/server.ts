@@ -340,8 +340,9 @@ async function handle_search(req: Request): Promise<Response> {
     });
   }
   try {
-    const itunes_url =
-      `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=10`;
+    const itunes_url = `https://itunes.apple.com/search?term=${
+      encodeURIComponent(query)
+    }&media=music&entity=song&limit=10`;
     const res = await fetch(itunes_url);
     if (!res.ok) throw new Error(`iTunes status ${res.status}`);
     const body = await res.json() as { results?: Record<string, unknown>[] };
@@ -404,13 +405,16 @@ async function handle_art_process(req: Request): Promise<Response> {
         headers: { "Content-Type": "application/json" },
       });
     }
-    return new Response(JSON.stringify({ base64: art.base64, colors: art.colors }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=3600",
+    return new Response(
+      JSON.stringify({ base64: art.base64, colors: art.colors }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=3600",
+        },
       },
-    });
+    );
   } catch (error) {
     log.error("Art process error", error);
     return new Response(JSON.stringify({ error: "Failed to process art" }), {
