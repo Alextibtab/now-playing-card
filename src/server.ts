@@ -14,7 +14,11 @@ import { build_svg_config, sanitize_preview_config } from "./server/config.ts";
 import { load_theme } from "./server/themes.ts";
 import { create_logger } from "./utils/logger.ts";
 import { fetch_lastfm } from "./sources/lastfm/index.ts";
+import { process_art_from_url } from "./utils/image_processing.ts";
 import { THEME_REGISTRY } from "../themes/registry.ts";
+
+const ALLOWED_ART_HOSTNAME_SUFFIX = ".mzstatic.com";
+const SEARCH_QUERY_MAX_LENGTH = 200;
 
 const log = create_logger("Server");
 const editor_cache: { template: string | null } = { template: null };
@@ -179,7 +183,7 @@ async function handle_get_editor(): Promise<Response> {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-cache",
         "Content-Security-Policy":
-          `default-src 'none'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'; img-src data:; font-src data:; connect-src 'self'`,
+          `default-src 'none'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'; img-src data: https://*.mzstatic.com; font-src data:; connect-src 'self'`,
         "X-Frame-Options": "DENY",
       },
     });
@@ -321,6 +325,105 @@ function handle_get_preview(req: Request, source: SourceType): Response {
   });
 }
 
+async function handle_search(req: Request): Promise<Response> {
+  const query = new URL(req.url).searchParams.get("q")?.trim() ?? "";
+  if (!query) {
+    return new Response(JSON.stringify({ error: "Missing query" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  if (query.length > SEARCH_QUERY_MAX_LENGTH) {
+    return new Response(JSON.stringify({ error: "Query too long" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  try {
+    const itunes_url = `https://itunes.apple.com/search?term=${
+      encodeURIComponent(query)
+    }&media=music&entity=song&limit=10`;
+    const res = await fetch(itunes_url);
+    if (!res.ok) throw new Error(`iTunes status ${res.status}`);
+    const body = await res.json() as { results?: Record<string, unknown>[] };
+    const results = (body.results ?? []).map((t) => ({
+      trackName: t.trackName ?? "",
+      artistName: t.artistName ?? "",
+      collectionName: t.collectionName ?? "",
+      artworkThumbUrl: t.artworkUrl100 ?? "",
+      artworkUrl: typeof t.artworkUrl100 === "string"
+        ? t.artworkUrl100.replace("100x100bb", "600x600bb")
+        : "",
+    }));
+    return new Response(JSON.stringify(results), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+      },
+    });
+  } catch (error) {
+    log.error("Search proxy error", error);
+    return new Response(JSON.stringify({ error: "Search failed" }), {
+      status: 502,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+async function handle_art_process(req: Request): Promise<Response> {
+  const raw_url = new URL(req.url).searchParams.get("url") ?? "";
+  if (!raw_url) {
+    return new Response(JSON.stringify({ error: "Missing url" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(raw_url);
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid url" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    !parsed.hostname.endsWith(ALLOWED_ART_HOSTNAME_SUFFIX)
+  ) {
+    return new Response(JSON.stringify({ error: "URL not allowed" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  try {
+    const art = await process_art_from_url(raw_url);
+    if (!art) {
+      return new Response(JSON.stringify({ error: "Failed to process art" }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    return new Response(
+      JSON.stringify({ base64: art.base64, colors: art.colors }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=3600",
+        },
+      },
+    );
+  } catch (error) {
+    log.error("Art process error", error);
+    return new Response(JSON.stringify({ error: "Failed to process art" }), {
+      status: 502,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
 function parse_source_from_path(
   path: string,
 ): { source: SourceType; remaining: string } | null {
@@ -392,10 +495,12 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
       response = await handle_get_asset("editor.css");
     } else if (path === "/assets/editor.js" && req.method === "GET") {
       response = await handle_get_asset("editor.js");
-    } else if (path === "/assets/sample-art.jpg" && req.method === "GET") {
-      response = await handle_get_asset("sample-art.jpg");
     } else if (path === "/api/preview" && req.method === "POST") {
       response = await handle_preview_render(req);
+    } else if (path === "/api/search" && req.method === "GET") {
+      response = await handle_search(req);
+    } else if (path === "/api/search/art" && req.method === "GET") {
+      response = await handle_art_process(req);
     } else if (path === "/api/themes" && req.method === "GET") {
       response = handle_get_themes();
     } else if (
