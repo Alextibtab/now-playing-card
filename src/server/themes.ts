@@ -54,7 +54,8 @@ export function is_svg_config(value: unknown): value is SvgConfig {
     (config.visualisation === undefined ||
       VISUALISATION_TYPES.includes(
         config.visualisation as VisualisationType,
-      ));
+      )) &&
+    (config.idle_text === undefined || is_string(config.idle_text));
 }
 
 export async function load_theme(name: string): Promise<SvgConfig | null> {

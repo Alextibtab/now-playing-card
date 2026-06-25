@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { compute_colors } from "../src/svg/config.ts";
+import { compute_colors, compute_playback_state } from "../src/svg/config.ts";
+import { parse_idle_text } from "../src/server/config.ts";
 
 // Simple mix_colors stub: ratio=0 -> color1, ratio=1 -> color2
 function mix_colors(a: string, _b: string, _ratio: number): string {
@@ -155,4 +156,97 @@ Deno.test("compute_colors: text colors always from config", () => {
   assertEquals(result.text_primary, "#ffffff");
   assertEquals(result.text_secondary, "#cccccc");
   assertEquals(result.text_muted, "#888888");
+});
+
+// ---- compute_playback_state ----
+
+Deno.test("compute_playback_state: playing -> NOW PLAYING", () => {
+  const result = compute_playback_state({
+    status: "playing",
+    updated_at: Date.now(),
+  });
+  assertEquals(result.is_playing, true);
+  assertEquals(result.status_label, "NOW PLAYING");
+});
+
+Deno.test("compute_playback_state: last-played -> default idle label", () => {
+  const result = compute_playback_state({
+    status: "last-played",
+    updated_at: Date.now(),
+  });
+  assertEquals(result.is_playing, false);
+  assertEquals(result.is_last_played, true);
+  assertEquals(result.status_label, "LAST PLAYED");
+});
+
+Deno.test("compute_playback_state: last-played -> custom idle label", () => {
+  const result = compute_playback_state(
+    { status: "last-played", updated_at: Date.now() },
+    "CHECKED OUT",
+  );
+  assertEquals(result.is_playing, false);
+  assertEquals(result.is_last_played, true);
+  assertEquals(result.status_label, "CHECKED OUT");
+});
+
+Deno.test("compute_playback_state: stale playing -> custom idle label", () => {
+  const stale = Date.now() - 6 * 60 * 1000; // older than 5-min threshold
+  const result = compute_playback_state(
+    { status: "playing", updated_at: stale },
+    "GONE",
+  );
+  assertEquals(result.is_playing, false);
+  assertEquals(result.is_last_played, true);
+  assertEquals(result.status_label, "GONE");
+});
+
+Deno.test("compute_playback_state: playing ignores idle_text", () => {
+  const result = compute_playback_state(
+    { status: "playing", updated_at: Date.now() },
+    "IGNORED",
+  );
+  assertEquals(result.is_playing, true);
+  assertEquals(result.status_label, "NOW PLAYING");
+});
+
+Deno.test("compute_playback_state: empty idle_text falls back to default", () => {
+  const result = compute_playback_state(
+    { status: "last-played", updated_at: Date.now() },
+    "",
+  );
+  assertEquals(result.status_label, "LAST PLAYED");
+});
+
+// ---- parse_idle_text ----
+
+Deno.test("parse_idle_text: normal value", () => {
+  assertEquals(parse_idle_text("CHECKED OUT"), "CHECKED OUT");
+});
+
+Deno.test("parse_idle_text: trimmed", () => {
+  assertEquals(parse_idle_text("  PAUSED  "), "PAUSED");
+});
+
+Deno.test("parse_idle_text: empty -> undefined", () => {
+  assertEquals(parse_idle_text(""), undefined);
+  assertEquals(parse_idle_text("   "), undefined);
+});
+
+Deno.test("parse_idle_text: null -> undefined", () => {
+  assertEquals(parse_idle_text(null), undefined);
+});
+
+Deno.test("parse_idle_text: too long -> undefined", () => {
+  const long = "x".repeat(31);
+  assertEquals(parse_idle_text(long), undefined);
+});
+
+Deno.test("parse_idle_text: max length ok", () => {
+  const max = "x".repeat(30);
+  assertEquals(parse_idle_text(max), max);
+});
+
+Deno.test("parse_idle_text: control chars stripped", () => {
+  const input = "PLAY\x00ING\n";
+  assertEquals(parse_idle_text(input), "PLAYING");
 });

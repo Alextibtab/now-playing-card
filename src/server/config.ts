@@ -9,6 +9,7 @@ import {
   FONT_FAMILY_PATTERN,
   HEX_COLOR_PATTERN,
   MAX_FONT_FAMILY_LENGTH,
+  MAX_IDLE_TEXT_LENGTH,
   THEME_NAME_PATTERN,
   VALID_FONT_WEIGHTS,
 } from "./constants.ts";
@@ -53,6 +54,19 @@ export function parse_font_weight(value: string | null): number | undefined {
   return weight;
 }
 
+export function parse_idle_text(value: string | null): string | undefined {
+  if (!value) return undefined;
+  const normalized = value.trim();
+  if (!normalized || normalized.length > MAX_IDLE_TEXT_LENGTH) {
+    return undefined;
+  }
+  // Strip control characters (XML safety; render-time escape_xml handles entities)
+  // deno-lint-ignore no-control-regex
+  const cleaned = normalized.replace(/[\x00-\x1f\x7f]/g, "");
+  if (!cleaned) return undefined;
+  return cleaned;
+}
+
 export async function build_svg_config(
   params: URLSearchParams,
 ): Promise<SvgConfig> {
@@ -94,6 +108,7 @@ export async function build_svg_config(
   const dominant = dominant_param && HEX_COLOR_PATTERN.test(dominant_param)
     ? dominant_param
     : undefined;
+  const idle_text = parse_idle_text(params.get("idleText"));
   const base_config: SvgConfig = {
     ...default_svg_config,
     ...(theme || {}),
@@ -111,6 +126,7 @@ export async function build_svg_config(
     ...(highlight ? { highlight } : {}),
     ...(accent ? { accent } : {}),
     ...(dominant ? { dominant } : {}),
+    ...(idle_text ? { idle_text } : {}),
   };
   return base_config;
 }
@@ -236,6 +252,12 @@ export function sanitize_preview_config(
     FONT_FALLBACK_PATTERN.test(raw.font_fallback)
   ) {
     config.font_fallback = raw.font_fallback;
+  }
+  if (typeof raw.idle_text === "string") {
+    const cleaned = raw.idle_text.trim().slice(0, MAX_IDLE_TEXT_LENGTH);
+    // deno-lint-ignore no-control-regex
+    const safe = cleaned.replace(/[\x00-\x1f\x7f]/g, "");
+    if (safe) config.idle_text = safe;
   }
 
   return config;
