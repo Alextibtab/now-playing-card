@@ -662,6 +662,7 @@ select:focus {
 .search-backdrop {
   position: absolute;
   inset: 0;
+  top: 46px;
   background: rgba(0, 0, 0, 0.55);
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -674,7 +675,7 @@ select:focus {
 .search-sidebar {
   position: absolute;
   right: 0;
-  top: 0;
+  top: 46px;
   bottom: 0;
   width: 380px;
   background: #0f0f12;
