@@ -177,27 +177,30 @@
           </div>
         </details>
 
-        <div class="json-section">
-          <div class="tab-bar">
-            <button class="tab-btn active" id="tabTheme">Theme</button>
-            <button class="tab-btn" id="tabData">Data</button>
+        <div class="json-section collapsed">
+          <div class="section-toggle" id="jsonToggle">Theme / Data</div>
+          <div class="json-section-body">
+            <div class="tab-bar">
+              <button class="tab-btn active" id="tabTheme">Theme</button>
+              <button class="tab-btn" id="tabData">Data</button>
+            </div>
+            <div class="json-header">
+              <span class="json-error" id="jsonError"></span>
+            </div>
+            <textarea
+              class="json-editor"
+              id="themeEditor"
+              spellcheck="false"
+            ></textarea>
+            <textarea
+              class="json-editor hidden"
+              id="dataEditor"
+              spellcheck="false"
+            ></textarea>
           </div>
-          <div class="json-header">
-            <span class="json-error" id="jsonError"></span>
-          </div>
-          <textarea
-            class="json-editor"
-            id="themeEditor"
-            spellcheck="false"
-          ></textarea>
-          <textarea
-            class="json-editor hidden"
-            id="dataEditor"
-            spellcheck="false"
-          ></textarea>
         </div>
 
-        <details class="embed-section" open>
+        <details class="embed-section">
           <summary>Embed</summary>
           <div class="embed-body">
             <div class="control-group">
