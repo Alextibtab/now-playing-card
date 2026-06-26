@@ -42,6 +42,7 @@ const DEFAULT_THEME = {
   font_body_weight: 400,
   font_fallback: "'Segoe UI', sans-serif",
   visualisation: "waveform",
+  idle_text: "LAST PLAYED",
 };
 
 const card_bg_row = document.getElementById("cardBgRow");
@@ -66,6 +67,7 @@ const show_artist = document.getElementById("showArtist");
 const show_album = document.getElementById("showAlbum");
 const album_position = document.getElementById("albumPosition");
 const text_align_el = document.getElementById("textAlign");
+const idle_text_input = document.getElementById("idleText");
 const upload_btn = document.getElementById("uploadBtn");
 const art_file_input = document.getElementById("artFileInput");
 const reset_btn = document.getElementById("resetBtn");
@@ -254,6 +256,8 @@ function sync_controls_from_theme(theme) {
     album_position.value = theme.album_position;
   }
   if (theme.text_align) text_align_el.value = theme.text_align;
+  if (theme.idle_text) idle_text_input.value = theme.idle_text;
+  else idle_text_input.value = "";
 
   if (theme.card_background) {
     set_color_active(
@@ -302,6 +306,9 @@ function apply_controls_to_theme() {
   theme.album_position = album_position.value;
   theme.text_align = text_align_el.value;
   theme.visualisation = vis_select.value;
+  const idle_val = idle_text_input.value.trim();
+  if (idle_val) theme.idle_text = idle_val;
+  else delete theme.idle_text;
 
   if (!card_bg_row.classList.contains("inactive")) {
     theme.card_background = card_bg_color.value;
@@ -420,6 +427,8 @@ function on_control_change() {
   album_position,
   text_align_el,
 ].forEach((el) => el.addEventListener("change", on_control_change));
+
+idle_text_input.addEventListener("input", on_control_change);
 
 status_select.addEventListener("change", () => {
   if (!syncing) schedule_render();
@@ -579,6 +588,7 @@ reset_btn.addEventListener("click", async () => {
   show_album.checked = true;
   album_position.value = "left";
   text_align_el.value = "left";
+  idle_text_input.value = "";
   set_color_inactive(
     card_bg_row,
     card_bg_color,
@@ -643,6 +653,12 @@ function generate_widget_url() {
     if (theme.show_title === false) params.set("showTitle", "0");
     if (theme.show_artist === false) params.set("showArtist", "0");
     if (theme.show_album === false) params.set("showAlbum", "0");
+    if (
+      theme.idle_text &&
+      theme.idle_text !== DEFAULT_THEME.idle_text
+    ) {
+      params.set("idleText", theme.idle_text);
+    }
     if (
       theme.font_title_family &&
       theme.font_title_family !== DEFAULT_THEME.font_title_family

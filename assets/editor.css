@@ -271,6 +271,29 @@ select:focus {
   line-height: 1.4;
 }
 
+/* ---- Text input (idle text) ---- */
+
+.text-input {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #e4e4e7;
+  font-family: inherit;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: #52525b;
+}
+
+.text-input::placeholder {
+  color: #3f3f46;
+}
+
 .upload-btn {
   display: flex;
   align-items: center;

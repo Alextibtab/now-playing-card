@@ -88,6 +88,7 @@ export interface SvgConfig {
   font_title_data_url?: string;
   font_body_data_url?: string;
   visualisation: VisualisationType;
+  idle_text: string;
 }
 
 export const default_svg_config: SvgConfig = {
@@ -110,6 +111,7 @@ export const default_svg_config: SvgConfig = {
   font_body_weight: 400,
   font_fallback: "'Segoe UI', sans-serif",
   visualisation: "waveform",
+  idle_text: "LAST PLAYED",
 };
 
 export type SourceType = "tauon" | "spotify" | "lastfm" | "tidal";

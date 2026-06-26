@@ -17,7 +17,7 @@ export async function generate_now_playing_svg(
   data: NowPlayingData | null,
   config: SvgConfig = default_svg_config,
 ): Promise<string> {
-  const playback = compute_playback_state(data);
+  const playback = compute_playback_state(data, config.idle_text);
   const colors = compute_colors(data, config, mix_colors);
   const layout = compute_layout(
     config.width,

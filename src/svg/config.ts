@@ -11,6 +11,7 @@ export interface PlaybackState {
 
 export function compute_playback_state(
   data: { status?: string; updated_at?: number } | null,
+  idle_text?: string,
 ): PlaybackState {
   const now = Date.now();
   const updated_at = data?.updated_at ?? 0;
@@ -21,7 +22,8 @@ export function compute_playback_state(
   const is_last_played = status === "last-played" ||
     (status === "playing" && is_stale);
   const has_track = !!(data && (is_playing || is_last_played));
-  const status_label = is_playing ? "NOW PLAYING" : "LAST PLAYED";
+  const idle_label = idle_text || "LAST PLAYED";
+  const status_label = is_playing ? "NOW PLAYING" : idle_label;
 
   return {
     is_playing,
