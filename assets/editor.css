@@ -57,6 +57,7 @@ body {
 
 .controls {
   border-bottom: 1px solid #27272a;
+  flex-shrink: 0;
 }
 
 .controls summary {
@@ -323,7 +324,58 @@ select:focus {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 250px;
+  border-top: 1px solid #27272a;
+}
+
+.json-section.collapsed {
+  flex: 0 0 auto;
   min-height: 0;
+}
+
+.json-section.collapsed .json-section-body {
+  display: none;
+}
+
+.section-toggle {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #a1a1aa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.section-toggle::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent #52525b;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.json-section:not(.collapsed) .section-toggle::before {
+  transform: rotate(90deg);
+}
+
+.section-toggle:hover {
+  color: #e4e4e7;
+}
+
+.json-section-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 200px;
 }
 
 .tab-bar {
@@ -356,12 +408,16 @@ select:focus {
 }
 
 .json-header {
-  padding: 6px 16px;
-  display: flex;
+  padding: 0 16px;
+  display: none;
   align-items: center;
   justify-content: flex-end;
   border-bottom: 1px solid #27272a;
-  min-height: 30px;
+}
+
+.json-header.has-error {
+  display: flex;
+  padding: 6px 16px;
 }
 
 .json-error {
@@ -434,6 +490,7 @@ select:focus {
 
 .embed-section {
   border-top: 1px solid #27272a;
+  flex-shrink: 0;
 }
 
 .embed-section summary {
@@ -565,6 +622,7 @@ select:focus {
   border-top: 1px solid #27272a;
   background: #0f0f12;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .footer-left {

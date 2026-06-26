@@ -195,9 +195,11 @@ function parse_editor(textarea) {
   try {
     const parsed = JSON.parse(textarea.value);
     json_error.textContent = "";
+    json_error.parentElement.classList.remove("has-error");
     return parsed;
   } catch (e) {
     json_error.textContent = e.message;
+    json_error.parentElement.classList.add("has-error");
     return null;
   }
 }
@@ -894,6 +896,12 @@ copy_btn.addEventListener("click", async () => {
   } catch {
     embed_output.select();
   }
+});
+
+// ---- JSON section toggle ----
+
+document.getElementById("jsonToggle").addEventListener("click", () => {
+  document.querySelector(".json-section").classList.toggle("collapsed");
 });
 
 async function init() {
