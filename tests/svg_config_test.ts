@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { compute_colors, compute_playback_state } from "../src/svg/config.ts";
 import { parse_idle_text } from "../src/server/config.ts";
+import { is_svg_config } from "../src/server/themes.ts";
 
 // Simple mix_colors stub: ratio=0 -> color1, ratio=1 -> color2
 function mix_colors(a: string, _b: string, _ratio: number): string {
@@ -249,4 +250,53 @@ Deno.test("parse_idle_text: max length ok", () => {
 Deno.test("parse_idle_text: control chars stripped", () => {
   const input = "PLAY\x00ING\n";
   assertEquals(parse_idle_text(input), "PLAYING");
+});
+
+// ---- is_svg_config: idle_text validation ----
+
+const VALID_THEME = {
+  width: 800,
+  height: 200,
+  text_primary: "#fafafa",
+  text_secondary: "#cbd5e1",
+  text_muted: "#94a3b8",
+  album_size: 150,
+  border_radius: 16,
+  album_position: "left",
+  text_align: "left",
+  show_status: true,
+  show_title: true,
+  show_artist: true,
+  show_album: true,
+  font_title_family: "DotGothic16",
+  font_body_family: "Space Mono",
+  font_title_weight: 400,
+  font_body_weight: 400,
+  font_fallback: "'Segoe UI', sans-serif",
+  visualisation: "waveform",
+};
+
+Deno.test("is_svg_config: idle_text omitted -> valid", () => {
+  const theme = { ...VALID_THEME };
+  assertEquals(is_svg_config(theme), true);
+});
+
+Deno.test("is_svg_config: idle_text within length cap -> valid", () => {
+  const theme = { ...VALID_THEME, idle_text: "RECENTLY PLAYED" };
+  assertEquals(is_svg_config(theme), true);
+});
+
+Deno.test("is_svg_config: idle_text at max length -> valid", () => {
+  const theme = { ...VALID_THEME, idle_text: "x".repeat(30) };
+  assertEquals(is_svg_config(theme), true);
+});
+
+Deno.test("is_svg_config: idle_text over length cap -> invalid", () => {
+  const theme = { ...VALID_THEME, idle_text: "x".repeat(31) };
+  assertEquals(is_svg_config(theme), false);
+});
+
+Deno.test("is_svg_config: idle_text empty string -> invalid", () => {
+  const theme = { ...VALID_THEME, idle_text: "" };
+  assertEquals(is_svg_config(theme), false);
 });

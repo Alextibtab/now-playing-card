@@ -2,6 +2,7 @@ import { SvgConfig, VISUALISATION_TYPES, VisualisationType } from "../types.ts";
 import { create_logger } from "../utils/logger.ts";
 import {
   MAX_FONT_FAMILY_LENGTH,
+  MAX_IDLE_TEXT_LENGTH,
   THEME_NAME_PATTERN,
   VALID_FONT_WEIGHTS,
 } from "./constants.ts";
@@ -24,6 +25,10 @@ export function is_svg_config(value: unknown): value is SvgConfig {
     typeof input === "string" &&
     input.length > 0 &&
     input.length <= MAX_FONT_FAMILY_LENGTH;
+  const is_valid_idle_text = (input: unknown): input is string =>
+    typeof input === "string" &&
+    input.length > 0 &&
+    input.length <= MAX_IDLE_TEXT_LENGTH;
   const album_position = config.album_position;
   const text_align = config.text_align;
   return is_number(config.width) &&
@@ -55,7 +60,7 @@ export function is_svg_config(value: unknown): value is SvgConfig {
       VISUALISATION_TYPES.includes(
         config.visualisation as VisualisationType,
       )) &&
-    (config.idle_text === undefined || is_string(config.idle_text));
+    (config.idle_text === undefined || is_valid_idle_text(config.idle_text));
 }
 
 export async function load_theme(name: string): Promise<SvgConfig | null> {
