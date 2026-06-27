@@ -14,6 +14,11 @@ import { build_svg_config, sanitize_preview_config } from "./server/config.ts";
 import { load_theme } from "./server/themes.ts";
 import { create_logger } from "./utils/logger.ts";
 import { fetch_lastfm } from "./sources/lastfm/index.ts";
+import { fetch_spotify } from "./sources/spotify/index.ts";
+import {
+  handle_spotify_auth,
+  handle_spotify_callback,
+} from "./sources/spotify/auth.ts";
 import { process_art_from_url } from "./utils/image_processing.ts";
 import { THEME_REGISTRY } from "../themes/registry.ts";
 
@@ -95,6 +100,18 @@ async function fetch_now_playing(
     }
 
     return fetch_lastfm(api_key, username);
+  }
+
+  if (source === "spotify") {
+    const client_id = Deno.env.get("SPOTIFY_CLIENT_ID");
+    const client_secret = Deno.env.get("SPOTIFY_CLIENT_SECRET");
+
+    if (!client_id || !client_secret) {
+      log.warn("Spotify credentials not configured");
+      return null;
+    }
+
+    return fetch_spotify(kv);
   }
 
   log.warn(`Source "${source}" not implemented`);
@@ -468,6 +485,18 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
         response = await handle_post_tauon_now_playing(req, kv);
       } else if (remaining === "/api/now-playing" && req.method === "GET") {
         response = await handle_get_now_playing(kv, source);
+      } else if (
+        remaining === "/auth" &&
+        req.method === "GET" &&
+        source === "spotify"
+      ) {
+        response = await handle_spotify_auth(req, kv);
+      } else if (
+        remaining === "/callback" &&
+        req.method === "GET" &&
+        source === "spotify"
+      ) {
+        response = await handle_spotify_callback(req, kv);
       } else if (remaining === "/") {
         response = new Response(
           JSON.stringify({
@@ -477,6 +506,9 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
               preview: `/${source}/preview`,
               update: source === "tauon"
                 ? `POST /${source}/api/now-playing`
+                : null,
+              auth: source === "spotify"
+                ? `GET /${source}/auth?key=API_KEY`
                 : null,
               debug: `GET /${source}/api/now-playing`,
             },
@@ -524,7 +556,9 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
             },
             spotify: {
               type: "direct",
-              widget: "/spotify/now-playing.svg (not implemented)",
+              widget: "/spotify/now-playing.svg",
+              auth: "GET /spotify/auth?key=API_KEY",
+              config: "SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET",
             },
             tidal: {
               type: "direct",
