@@ -42,6 +42,7 @@ interface LastFmTrackInfoResponse {
 
 let cached_data: NowPlayingData | null = null;
 let cache_time = 0;
+let pending_request: Promise<NowPlayingData | null> | null = null;
 const CACHE_TTL_MS = 30000;
 
 function get_largest_image_url(images: LastFmImage[]): string | null {
@@ -87,14 +88,10 @@ async function fetch_track_info(
   }
 }
 
-export async function fetch_lastfm(
+async function fetch_lastfm_inner(
   api_key: string,
   username: string,
 ): Promise<NowPlayingData | null> {
-  if (cached_data && Date.now() - cache_time < CACHE_TTL_MS) {
-    return cached_data;
-  }
-
   const params = new URLSearchParams({
     method: "user.getrecenttracks",
     user: username,
@@ -151,4 +148,21 @@ export async function fetch_lastfm(
   } catch {
     return null;
   }
+}
+
+export function fetch_lastfm(
+  api_key: string,
+  username: string,
+): Promise<NowPlayingData | null> {
+  if (cached_data && Date.now() - cache_time < CACHE_TTL_MS) {
+    return Promise.resolve(cached_data);
+  }
+
+  if (pending_request) return pending_request;
+
+  pending_request = fetch_lastfm_inner(api_key, username).finally(() => {
+    pending_request = null;
+  });
+
+  return pending_request;
 }
