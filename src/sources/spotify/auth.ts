@@ -329,18 +329,29 @@ async function refresh_access_token(
   }
 }
 
+function escape_html(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function callback_html(
   title: string,
   message: string,
   success: boolean,
 ): string {
+  const safe_title = escape_html(title);
+  const safe_message = escape_html(message);
   const color = success ? "#22c55e" : "#ef4444";
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${title}</title>
+  <title>${safe_title}</title>
   <style>
     body {
       margin: 0; padding: 48px;
@@ -360,8 +371,8 @@ function callback_html(
 </head>
 <body>
   <div class="card">
-    <h1>${title}</h1>
-    <p>${message}</p>
+    <h1>${safe_title}</h1>
+    <p>${safe_message}</p>
   </div>
 </body>
 </html>`;
