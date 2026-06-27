@@ -46,7 +46,16 @@ interface LastFmTrackInfoResponse {
 let cached_data: NowPlayingData | null = null;
 let cache_time = 0;
 let pending_request: Promise<NowPlayingData | null> | null = null;
-const CACHE_TTL_MS = 30000;
+const DEFAULT_CACHE_TTL_MS = 30_000;
+const MIN_CACHE_TTL_MS = 5_000;
+
+function get_cache_ttl(): number {
+  const env = Deno.env.get("SOURCE_CACHE_TTL_MS");
+  if (!env) return DEFAULT_CACHE_TTL_MS;
+  const val = parseInt(env);
+  if (isNaN(val) || val < MIN_CACHE_TTL_MS) return MIN_CACHE_TTL_MS;
+  return val;
+}
 
 function get_largest_image_url(images: LastFmImage[]): string | null {
   if (!images?.length) return null;
@@ -185,7 +194,7 @@ export function fetch_lastfm(
   api_key: string,
   username: string,
 ): Promise<NowPlayingData | null> {
-  if (cached_data && Date.now() - cache_time < CACHE_TTL_MS) {
+  if (cached_data && Date.now() - cache_time < get_cache_ttl()) {
     log.debug("Returning cached data");
     return Promise.resolve(cached_data);
   }
