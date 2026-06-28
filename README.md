@@ -5,7 +5,7 @@
 [![Deno][Deno Badge]][Deno] [![License][License Badge]][License]
 <br>
 
-![Now Playing Widget](https://now-playing.alextibtab.deno.net/spotify/now-playing.svg)
+[![Now Playing Widget](https://now-playing.alextibtab.deno.net/spotify/now-playing.svg)](https://now-playing.alextibtab.deno.net/spotify/listen)
 <br>
 
 A "now playing" widget for GitHub READMEs.

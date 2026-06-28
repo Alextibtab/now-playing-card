@@ -82,6 +82,46 @@ async function handle_get_svg(
   });
 }
 
+async function handle_get_listen(
+  req: Request,
+  kv: Deno.Kv,
+  source: SourceType,
+): Promise<Response> {
+  const origin = new URL(req.url).origin;
+  const data = await fetch_now_playing(kv, source);
+
+  if (!data) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        "Location": `${origin}/${source}/now-playing.svg`,
+        "Cache-Control": "no-cache",
+      },
+    });
+  }
+
+  if (data.track_url) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        "Location": data.track_url,
+        "Cache-Control": "no-cache",
+      },
+    });
+  }
+
+  const query = encodeURIComponent(
+    `${data.artist} ${data.title}`.trim(),
+  );
+  return new Response(null, {
+    status: 302,
+    headers: {
+      "Location": `https://music.youtube.com/search?q=${query}`,
+      "Cache-Control": "no-cache",
+    },
+  });
+}
+
 async function fetch_now_playing(
   kv: Deno.Kv,
   source: SourceType,
@@ -475,6 +515,8 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
 
       if (remaining === "/now-playing.svg" && req.method === "GET") {
         response = await handle_get_svg(req, kv, source);
+      } else if (remaining === "/listen" && req.method === "GET") {
+        response = await handle_get_listen(req, kv, source);
       } else if (remaining === "/preview" && req.method === "GET") {
         response = handle_get_preview(req, source);
       } else if (
@@ -503,6 +545,7 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
             source,
             endpoints: {
               widget: `/${source}/now-playing.svg`,
+              listen: `/${source}/listen`,
               preview: `/${source}/preview`,
               update: source === "tauon"
                 ? `POST /${source}/api/now-playing`

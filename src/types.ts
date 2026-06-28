@@ -46,6 +46,7 @@ export interface NowPlayingData {
   art_base64: string | null;
   colors: ColorPalette | null;
   updated_at: number;
+  track_url?: string | null;
 }
 
 export type VisualisationType =
