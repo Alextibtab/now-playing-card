@@ -115,4 +115,4 @@ export const default_svg_config: SvgConfig = {
   idle_text: "LAST PLAYED",
 };
 
-export type SourceType = "tauon" | "spotify" | "lastfm" | "tidal";
+export type SourceType = "tauon" | "spotify" | "lastfm";
