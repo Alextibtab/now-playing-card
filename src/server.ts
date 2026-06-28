@@ -484,7 +484,7 @@ async function handle_art_process(req: Request): Promise<Response> {
 function parse_source_from_path(
   path: string,
 ): { source: SourceType; remaining: string } | null {
-  const match = path.match(/^\/(tauon|spotify|lastfm|tidal)(\/.*)?$/);
+  const match = path.match(/^\/(tauon|spotify|lastfm)(\/.*)?$/);
   if (match) {
     return { source: match[1] as SourceType, remaining: match[2] || "/" };
   }
@@ -589,28 +589,38 @@ async function handle_request(req: Request, kv: Deno.Kv): Promise<Response> {
           sources: {
             tauon: {
               type: "poller",
-              widget: "/tauon/now-playing.svg",
+              widget: "GET /tauon/now-playing.svg",
+              listen: "GET /tauon/listen",
+              preview: "GET /tauon/preview",
+              debug: "GET /tauon/api/now-playing",
               update: "POST /tauon/api/now-playing (requires API_KEY)",
             },
             lastfm: {
               type: "direct",
-              widget: "/lastfm/now-playing.svg",
               config: "LASTFM_API_KEY + LASTFM_USERNAME",
+              widget: "GET /lastfm/now-playing.svg",
+              listen: "GET /lastfm/listen",
+              preview: "GET /lastfm/preview",
+              debug: "GET /lastfm/api/now-playing",
             },
             spotify: {
-              type: "direct",
-              widget: "/spotify/now-playing.svg",
-              auth: "GET /spotify/auth?key=API_KEY",
+              type: "oauth2",
               config: "SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET",
-            },
-            tidal: {
-              type: "direct",
-              widget: "/tidal/now-playing.svg (not implemented)",
+              auth: "GET /spotify/auth?key=API_KEY",
+              callback: "GET /spotify/callback",
+              widget: "GET /spotify/now-playing.svg",
+              listen: "GET /spotify/listen",
+              preview: "GET /spotify/preview",
+              debug: "GET /spotify/api/now-playing",
             },
           },
           utility: {
-            editor: "/editor",
+            editor: "GET /editor",
             preview: "POST /api/preview",
+            search: "GET /api/search",
+            art: "GET /api/search/art",
+            themes: "GET /api/themes",
+            theme: "GET /api/themes/:name",
           },
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
