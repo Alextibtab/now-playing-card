@@ -41,6 +41,7 @@ interface SpotifyTrack {
   artists: SpotifyArtist[];
   album: SpotifyAlbum;
   type: "track";
+  external_urls: { spotify: string };
 }
 
 interface SpotifyEpisode {
@@ -48,6 +49,7 @@ interface SpotifyEpisode {
   show: { name: string };
   images: SpotifyImage[];
   type: "episode";
+  external_urls: { spotify: string };
 }
 
 interface SpotifyCurrentlyPlaying {
@@ -77,6 +79,7 @@ function extract_track_info(item: SpotifyTrack | SpotifyEpisode): {
   artist: string;
   album: string;
   art_url: string | null;
+  track_url: string | null;
 } {
   if (item.type === "episode") {
     return {
@@ -86,6 +89,7 @@ function extract_track_info(item: SpotifyTrack | SpotifyEpisode): {
       art_url: get_largest_image_url(
         (item as SpotifyEpisode).images,
       ),
+      track_url: item.external_urls?.spotify || null,
     };
   }
 
@@ -96,6 +100,7 @@ function extract_track_info(item: SpotifyTrack | SpotifyEpisode): {
       "Unknown Artist",
     album: track.album?.name || "",
     art_url: get_largest_image_url(track.album?.images || []),
+    track_url: track.external_urls?.spotify || null,
   };
 }
 
@@ -189,6 +194,7 @@ async function fetch_spotify_inner(
       art_base64: art?.base64 || null,
       colors: art?.colors || null,
       updated_at: Date.now(),
+      track_url: info.track_url,
     };
 
     cached_data = result;
@@ -216,6 +222,7 @@ async function fetch_spotify_inner(
     art_base64: art?.base64 || null,
     colors: art?.colors || null,
     updated_at: Date.now(),
+    track_url: info.track_url,
   };
 
   cached_data = result;

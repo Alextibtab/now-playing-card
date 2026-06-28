@@ -18,6 +18,7 @@ interface LastFmRecentTrack {
   image: LastFmImage[];
   "@attr"?: { nowplaying?: string };
   mbid?: string;
+  url?: string;
 }
 
 interface LastFmRecentTracksResponse {
@@ -177,6 +178,7 @@ async function fetch_lastfm_inner(
       art_base64: art?.base64 || null,
       colors: art?.colors || null,
       updated_at: Date.now(),
+      track_url: track.url || null,
     };
 
     cached_data = result;
