@@ -1,5 +1,6 @@
 [config]
-model = "gpt-5.2-codex"
+model = "kimi-k2.7-code"
+fallback_models = ["glm-5.3"]
 
 [pr_reviewer]
 extra_instructions = "Focus on TypeScript/Deno best practices, error handling, and security."
