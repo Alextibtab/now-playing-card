@@ -156,7 +156,7 @@ export async function generate_now_playing_svg(
     <text x="${text_x}" y="${
             album_y + 18
           }" fill="${highlight}" font-size="12" font-weight="700" letter-spacing="0.12em" filter="url(#textGlow)" text-anchor="${text_anchor}" font-family="${font_body_family}">
-      ${playback.status_label}
+      ${escape_xml(playback.status_label)}
     </text>
     `
           : ""
