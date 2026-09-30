@@ -19,7 +19,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI.KEY: ${{ secrets.OPENCODE_ZEN_KEY }}
           OPENAI.API_BASE: "https://opencode.ai/zen/v1"
-          config.model: "gpt-5.2-codex"
+          config.model: "kimi-k2.7-code"
+          config.fallback_models: '["glm-5.3"]'
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
