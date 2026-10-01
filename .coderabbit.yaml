@@ -1,0 +1,27 @@
+# CodeRabbit configuration
+# Docs: https://docs.coderabbit.ai/reference/configuration
+language: "en-US"
+
+reviews:
+  # "chill" = focused, fewer nitpicks; use "assertive" for more thorough.
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  review_details: false
+  auto_review:
+    enabled: true
+    drafts: false
+    # Review all base branches (CodeRabbit thinks this repo's default branch
+    # isn't main, so it skips auto-review otherwise).
+    base_branches:
+      - ".*"
+  path_instructions:
+    - path: "**/*.ts"
+      instructions: >-
+        Focus on TypeScript/Deno best practices, error handling, and security.
+        Flag any untrusted input interpolated into SVG/HTML without escaping.
+
+chat:
+  auto_reply: true
