@@ -1,5 +1,5 @@
 [config]
-model = "openai/kimi-k2.7-code"
+model = "openai/deepseek-v4.1-flash"
 fallback_models = ["openai/glm-5.3"]
 # Zen model names aren't in litellm's model map, so pr-agent can't infer the
 # context window; set it explicitly to avoid a "could not resolve model" error.

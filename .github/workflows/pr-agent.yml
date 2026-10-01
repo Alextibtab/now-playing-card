@@ -19,7 +19,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI.KEY: ${{ secrets.OPENCODE_ZEN_KEY }}
           OPENAI.API_BASE: "https://opencode.ai/zen/v1"
-          config.model: "openai/kimi-k2.7-code"
+          config.model: "openai/deepseek-v4.1-flash"
           config.fallback_models: '["openai/glm-5.3"]'
           config.custom_model_max_tokens: "128000"
           github_action_config.auto_review: "true"
