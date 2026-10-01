@@ -13,6 +13,10 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
+    # Review all base branches (CodeRabbit thinks this repo's default branch
+    # isn't main, so it skips auto-review otherwise).
+    base_branches:
+      - ".*"
   path_instructions:
     - path: "**/*.ts"
       instructions: >-
