@@ -14,14 +14,16 @@ jobs:
       contents: write
     steps:
       - name: PR Agent action step
-        uses: qodo-ai/pr-agent@main
+        uses: the-pr-agent/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI.KEY: ${{ secrets.OPENCODE_ZEN_KEY }}
           OPENAI.API_BASE: "https://opencode.ai/zen/v1"
-          config.model: "openai/deepseek-v4.1-flash"
-          config.fallback_models: '["openai/glm-5.3"]'
+          config.model: "openai/glm-5.3"
+          config.fallback_models: '["openai/deepseek-v4-pro"]'
           config.custom_model_max_tokens: "128000"
+          config.ai_timeout: "90"
+          config.max_output_tokens: "4096"
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
