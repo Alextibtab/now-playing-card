@@ -1,6 +1,6 @@
 [config]
-model = "kimi-k2.7-code"
-fallback_models = ["glm-5.3"]
+model = "openai/deepseek-v4.1-flash"
+fallback_models = ["openai/glm-5.3"]
 # Zen model names aren't in litellm's model map, so pr-agent can't infer the
 # context window; set it explicitly to avoid a "could not resolve model" error.
 custom_model_max_tokens = 128000

@@ -54,6 +54,22 @@ deno lint
 deno cache --unstable-kv src/server.ts
 ```
 
+## Git & Commit Signing
+
+- Commits in this repository are GPG-signed (`commit.gpgsign = true`).
+- **NEVER** create a commit with signing disabled, and never bypass, strip, or
+  downgrade a commit signature. This includes (but is not limited to)
+  `--no-gpg-sign`, `-c commit.gpgsign=false`, and any equivalent override. Never
+  push an unsigned commit, and never amend a signed commit into an unsigned one.
+- If any `commit`, `amend`, `rebase`, `cherry-pick`, or `merge` requires the GPG
+  passphrase and it cannot be entered non-interactively, **STOP and do not
+  commit**. Stage the changes (or leave them in the working tree) and hand the
+  user the exact `git` commands to run in their own terminal so they can enter
+  their passphrase themselves.
+- Waiting for the user to run a signing command is always preferable to dropping
+  the signature. When in doubt, give the user the command instead of executing a
+  signing operation.
+
 ## Environment Variables
 
 ### Server (Deno Deploy)
